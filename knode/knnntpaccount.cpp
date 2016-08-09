@@ -147,15 +147,15 @@ void KNNntpAccount::saveInfo()
   if(i_dentity)
     i_dentity->saveConfig(conf);
   else if(conf.hasKey("Email")) {
-    conf.deleteEntry("Name", false);
-    conf.deleteEntry("Email", false);
-    conf.deleteEntry("Reply-To", false);
-    conf.deleteEntry("Mail-Copies-To", false);
-    conf.deleteEntry("Org", false);
-    conf.deleteEntry("UseSigFile", false);
-    conf.deleteEntry("UseSigGenerator", false);
-    conf.deleteEntry("sigFile", false);
-    conf.deleteEntry("sigText", false);
+    conf.deleteEntry("Name");
+    conf.deleteEntry("Email");
+    conf.deleteEntry("Reply-To");
+    conf.deleteEntry("Mail-Copies-To");
+    conf.deleteEntry("Org");
+    conf.deleteEntry("UseSigFile");
+    conf.deleteEntry("UseSigGenerator");
+    conf.deleteEntry("sigFile");
+    conf.deleteEntry("sigText");
   }
 
   mCleanupConf->saveConfig( conf );

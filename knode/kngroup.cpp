@@ -161,15 +161,15 @@ void KNGroup::saveInfo()
     if(i_dentity)
       i_dentity->saveConfig(info);
     else if(info.hasKey("Email")) {
-      info.deleteEntry("Name", false);
-      info.deleteEntry("Email", false);
-      info.deleteEntry("Reply-To", false);
-      info.deleteEntry("Mail-Copies-To", false);
-      info.deleteEntry("Org", false);
-      info.deleteEntry("UseSigFile", false);
-      info.deleteEntry("UseSigGenerator", false);
-      info.deleteEntry("sigFile", false);
-      info.deleteEntry("sigText", false);
+      info.deleteEntry("Name");
+      info.deleteEntry("Email");
+      info.deleteEntry("Reply-To");
+      info.deleteEntry("Mail-Copies-To");
+      info.deleteEntry("Org");
+      info.deleteEntry("UseSigFile");
+      info.deleteEntry("UseSigGenerator");
+      info.deleteEntry("sigFile");
+      info.deleteEntry("sigText");
     }
 
     mCleanupConf->saveConfig( info );

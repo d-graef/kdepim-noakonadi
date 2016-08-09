@@ -821,7 +821,7 @@ void KNode::AppearanceWidget::slotFontItemActivated( QListWidgetItem *item )
   if ( item ) {
     FontListItem *fontItem = static_cast<FontListItem*>( item );
     QFont font = fontItem->font();
-    int result = KFontDialog::getFont(font,false,this);
+    int result = KFontDialog::getFont(font);
 
     if (result == KFontDialog::Accepted)
       fontItem->setFont(font);
