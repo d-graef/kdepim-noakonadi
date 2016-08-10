@@ -46,6 +46,8 @@
 
 #include <mailtransport/transportmanager.h>
 
+// 2016-07-05: Enable patch to trim References header field
+#define REFTRIM  1
 
 using namespace KNode;
 using namespace KNode::Utilities;
@@ -188,6 +190,43 @@ void KNArticleFactory::createReply(KNRemoteArticle *a, const QString &selectedTe
 
   art->references()->from7BitString(refs);
   art->references()->appendIdentifier(a->messageID()->as7BitString(false));
+
+#if REFTRIM
+  // According to RFC5537 the References header field must be trimmed if too long:
+  // https://tools.ietf.org/html/rfc5537#section-3.4.4
+  references=art->references(false);
+  if (references)
+  {
+    refs = references->as7BitString(true);
+    if (998 < refs.size())
+    {
+      // Skip first Message-ID
+      int start = refs.indexOf('>') + 1;
+      int end;
+      if (1 < start)
+      {
+        while (998 < refs.size())
+        {
+          //printf("Remove ref\n");
+          end = refs.indexOf('>', start) + 1;
+          refs.remove(start, end - start);
+        }
+      }
+      if (998 < refs.size())
+        KMessageBox::information(knGlobals.topWidget, i18n("References trimming failed"), QString(), "refTrimError");
+      else
+      {
+        // Success, strip field name
+        end = refs.indexOf('<');
+        if (0 < end)
+          refs.remove(0, end);
+        //printf("Refs: %s\n", refs.data());
+        art->references()->from7BitString(refs);
+        KMessageBox::information(knGlobals.topWidget, i18n("References were trimmed according to RFC5537"), QString(), "refTrimNote");
+      }
+    }
+  }
+#endif  // REF_TRIM
 
   //Mail-Copies-To
   bool authorDislikesMailCopies=false;
