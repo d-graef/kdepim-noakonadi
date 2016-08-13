@@ -33,7 +33,6 @@ KNFilterSelectAction::KNFilterSelectAction( const QString& text, const QString& 
   : KActionMenu(text, parent), currentItem(-42)
 {
   setIcon(KIcon(pix));
-  menu()->setCheckable(true);
   connect(menu(),SIGNAL(activated(int)),this,SLOT(slotMenuActivated(int)));
   setDelayed(false);
   parent->addAction(name, this);
