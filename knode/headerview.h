@@ -166,7 +166,8 @@ class KNHeaderView : public K3ListView  {
     void decCurrentArticle();
     void selectCurrentArticle();
 
-    void toggleColumn( int column, int mode = -1 );
+    void toggleColumnSize( bool mode );
+    void toggleColumnScore( bool mode );
     void prepareForGroup();
     void prepareForFolder();
 
@@ -194,6 +195,8 @@ class KNHeaderView : public K3ListView  {
     KMenu *mPopup;
     bool mShowingFolder;
     bool mInitDone;
+    QAction * KnHwPmenuSize = 0;
+    QAction * KnHwPmenuScore = 0;
 
   private slots:
     void slotCenterDelayed();

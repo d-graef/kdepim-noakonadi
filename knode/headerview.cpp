@@ -61,7 +61,6 @@ KNHeaderView::KNHeaderView( QWidget *parent ) :
   setSelectionMode( Q3ListView::Extended );
   setShowSortIndicator( true );
   setShadeSortColumn ( true );
-  setRootIsDecorated( true );
   setSorting( mPaintInfo.dateCol );
   header()->setMovingEnabled( true );
   setColumnAlignment( mPaintInfo.sizeCol, Qt::AlignRight );
@@ -71,14 +70,18 @@ KNHeaderView::KNHeaderView( QWidget *parent ) :
   disconnect( header(), SIGNAL(sizeChange(int, int, int)) );
   connect( header(), SIGNAL(sizeChange(int, int, int)),
            SLOT(slotSizeChanged(int, int, int)) );
-
-  // column selection RMB menu
+  
+// column selection RMB menu
   mPopup = new KMenu( this );
   mPopup->addTitle( i18n("View Columns") );
-  mPopup->insertItem( i18n("Line Count"),  KPaintInfo::COL_SIZE );
-  mPopup->insertItem( i18n("Score"), KPaintInfo::COL_SCORE );
+  KnHwPmenuSize = mPopup->addAction( i18n("Line Count") );
+  KnHwPmenuSize->setCheckable(true);
+  KnHwPmenuScore = mPopup->addAction( i18n("Score") );
+  KnHwPmenuScore->setCheckable(true);
 
-  connect( mPopup, SIGNAL(activated(int)), this, SLOT(toggleColumn(int)) );
+  connect( KnHwPmenuSize, SIGNAL(toggled(bool)), this, SLOT(toggleColumnSize(bool)) );
+  connect( KnHwPmenuScore, SIGNAL(toggled(bool)), this, SLOT(toggleColumnScore(bool)) );
+
 
   // connect to the article manager
   connect( knGlobals.articleManager(), SIGNAL(aboutToShowGroup()), SLOT(prepareForGroup()) );
@@ -109,9 +112,9 @@ void KNHeaderView::readConfig()
     mInitDone = true;
   }
 
-  toggleColumn( KPaintInfo::COL_SIZE, knGlobals.settings()->showLines() );
+  toggleColumnSize( knGlobals.settings()->showLines() );
   if ( !mShowingFolder ) // score column is always hidden when showing a folder
-    toggleColumn( KPaintInfo::COL_SCORE, knGlobals.settings()->showScore() );
+    toggleColumnScore( knGlobals.settings()->showScore() );
 
   mDateFormatter.setCustomFormat( knGlobals.settings()->customDateFormat() );
   mDateFormatter.setFormat( knGlobals.settings()->dateFormat() );
@@ -384,34 +387,18 @@ bool KNHeaderView::nextUnreadThread()
 }
 
 
-void KNHeaderView::toggleColumn( int column, int mode )
+void KNHeaderView::toggleColumnSize(bool mode) 
 {
   bool *show = 0;
   int  *col  = 0;
   int  width = 0;
 
-  switch ( static_cast<KPaintInfo::ColumnIds>( column ) )
-  {
-    case KPaintInfo::COL_SIZE:
-      show  = &mPaintInfo.showSize;
-      col   = &mPaintInfo.sizeCol;
-      width = 42;
-      break;
-    case KPaintInfo::COL_SCORE:
-      show  = &mPaintInfo.showScore;
-      col   = &mPaintInfo.scoreCol;
-      width = 42;
-      break;
-    default:
-      return;
-  }
+  show  = &mPaintInfo.showSize;
+  col   = &mPaintInfo.sizeCol;
+  width = 42;
 
-  if ( mode == -1 )
-    *show = !*show;
-  else
-    *show = mode;
-
-  mPopup->setItemChecked( column, *show );
+  *show = mode;
+  KnHwPmenuSize->setChecked(*show);
 
   if (*show) {
     header()->setResizeEnabled( true, *col );
@@ -423,16 +410,40 @@ void KNHeaderView::toggleColumn( int column, int mode )
     hideColumn( *col );
   }
 
-  if ( mode == -1 ) // save config when toggled
     writeConfig();
 }
 
+void KNHeaderView::toggleColumnScore(bool mode)
+{
+  bool *show = 0;
+  int  *col  = 0;
+  int  width = 0;
+
+  show  = &mPaintInfo.showScore;
+  col   = &mPaintInfo.scoreCol;
+  width = 42;
+
+  *show = mode;
+  KnHwPmenuScore->setChecked(*show);
+
+  if (*show) {
+    header()->setResizeEnabled( true, *col );
+    setColumnWidth( *col, width );
+  }
+  else {
+    header()->setResizeEnabled( false, *col );
+    header()->setStretchEnabled( false, *col );
+    hideColumn( *col );
+  }
+
+    writeConfig();
+}
 
 void KNHeaderView::prepareForGroup()
 {
   mShowingFolder = false;
   header()->setLabel( mPaintInfo.senderCol, i18n("From") );
-  toggleColumn( KPaintInfo::COL_SCORE, knGlobals.settings()->showScore() );
+  toggleColumnScore( knGlobals.settings()->showScore() );
 }
 
 
@@ -440,7 +451,7 @@ void KNHeaderView::prepareForFolder()
 {
   mShowingFolder = true;
   header()->setLabel( mPaintInfo.senderCol, i18n("Newsgroups / To") );
-  toggleColumn( KPaintInfo::COL_SCORE, false ); // local folders have no score
+  toggleColumnScore( false ); // local folders have no score
 }
 
 
