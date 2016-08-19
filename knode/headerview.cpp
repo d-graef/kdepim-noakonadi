@@ -61,6 +61,7 @@ KNHeaderView::KNHeaderView( QWidget *parent ) :
   setSelectionMode( Q3ListView::Extended );
   setShowSortIndicator( true );
   setShadeSortColumn ( true );
+  setRootIsDecorated( true );
   setSorting( mPaintInfo.dateCol );
   header()->setMovingEnabled( true );
   setColumnAlignment( mPaintInfo.sizeCol, Qt::AlignRight );
