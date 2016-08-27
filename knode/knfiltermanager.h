@@ -15,6 +15,7 @@
 #ifndef KNFILTERMANAGER_H
 #define KNFILTERMANAGER_H
 
+#include <QSignalMapper>
 #include <qglobal.h>
 #include <QList>
 
@@ -39,12 +40,6 @@ class KNFilterSelectAction : public KActionMenu
     ~KNFilterSelectAction();
 
     void setCurrentItem(int id);
-
-  protected slots:
-    void slotMenuActivated(int id);
-
-  signals:
-    void activated(int id);
 
   private:
     int currentItem;
@@ -82,6 +77,10 @@ class KNFilterManager : public QObject
      */
     void setMenuAction(KNFilterSelectAction *a, QAction *keybA);
 
+  private:
+    QSignalMapper* signalMapperF = 0;
+    QActionGroup* filterGroup = 0;
+
   protected:
     void loadFilters();
     void saveFilterLists();
@@ -95,10 +94,12 @@ class KNFilterManager : public QObject
     KNFilterSelectAction *a_ctFilter;
     QList<int> menuOrder;
     bool commitNeeded;
+    QList<QAction*> menuFList;
+    QList<int> menuFListID;
 
   protected slots:
-    void slotMenuActivated(int id);
     void slotShowFilterChooser();
+    void slotMenuFilterL(int filter_id);
 
   signals:
     void filterChanged(KNArticleFilter *f);

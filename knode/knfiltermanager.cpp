@@ -33,7 +33,6 @@ KNFilterSelectAction::KNFilterSelectAction( const QString& text, const QString& 
   : KActionMenu(text, parent), currentItem(-42)
 {
   setIcon(KIcon(pix));
-  connect(menu(),SIGNAL(activated(int)),this,SLOT(slotMenuActivated(int)));
   setDelayed(false);
   parent->addAction(name, this);
 }
@@ -44,19 +43,6 @@ KNFilterSelectAction::~KNFilterSelectAction()
 {
 }
 
-void KNFilterSelectAction::setCurrentItem(int id)
-{
-  menu()->setItemChecked(currentItem, false);
-  menu()->setItemChecked(id, true);
-  currentItem = id;
-}
-
-
-void KNFilterSelectAction::slotMenuActivated(int id)
-{
-  setCurrentItem(id);
-  emit(activated(id));
-}
 
 
 //==============================================================================
@@ -68,6 +54,10 @@ KNFilterManager::KNFilterManager( QObject * parent )
 
   KConfigGroup conf(knGlobals.config(), "READNEWS");
   setFilter(conf.readEntry("lastFilterID", 1));
+
+  signalMapperF = new QSignalMapper(this);
+  filterGroup = new QActionGroup(this);
+ 
 }
 
 
@@ -291,8 +281,6 @@ KNArticleFilter* KNFilterManager::setFilter(const int id)
   currFilter=byID(id);
 
   if(currFilter) {
-    if(a_ctFilter)
-      a_ctFilter->setCurrentItem(currFilter->id());
     emit(filterChanged(currFilter));
   } else
     currFilter=bak;
@@ -312,36 +300,60 @@ KNArticleFilter* KNFilterManager::byID(int id)
 }
 
 
-
 void KNFilterManager::updateMenu()
 {
+ int qa_idx = 0;
+
   if(!a_ctFilter)
     return;
 
-  a_ctFilter->menu()->clear();
+//  a_ctFilter->menu()->clear();
   KNArticleFilter *f=0;
 
-  foreach ( int id, menuOrder ) {
-    if ( id != -1 ) {
-      if ( ( f = byID( id ) ) )
-        a_ctFilter->menu()->insertItem( f->translatedName(), f->id() );
+  for (int i = 0; i < menuFList.size(); ++i) {
+    filterGroup->removeAction( menuFList.at(i)  );
+    signalMapperF->removeMappings( menuFList.at(i) ); 
+  }
+
+  qDeleteAll(menuFList);
+  menuFList.clear();
+  menuFListID.clear();
+
+  foreach ( int f_id, menuOrder ) {
+    if ( f_id != -1 ) {
+      if ( ( f = byID( f_id ) ) ) {
+         menuFList.append( a_ctFilter->menu()->addAction( f->translatedName()) );
+         menuFListID.append( f->id() );
+         menuFList.at(qa_idx)->setCheckable(true);
+         menuFList.at(qa_idx)->setActionGroup(filterGroup);
+         connect (menuFList.at(qa_idx), SIGNAL(triggered()), signalMapperF, SLOT(map())) ;
+         signalMapperF->setMapping (menuFList.at(qa_idx), f->id() );
+         qa_idx++;
+      }
     } else
       a_ctFilter->menu()->addSeparator();
   }
 
-  if(currFilter)
-    a_ctFilter->setCurrentItem(currFilter->id());
+  connect (signalMapperF, SIGNAL(mapped(int)), this, SLOT(slotMenuFilterL(int))) ; 
+
+  if(currFilter) {
+    slotMenuFilterL( currFilter->id() );
+  }
 }
 
-
-
-void KNFilterManager::slotMenuActivated(int id)
+void KNFilterManager::slotMenuFilterL(int filter_id)
 {
-  KNArticleFilter *f=setFilter(id);
+  KNArticleFilter *f=setFilter(filter_id);
+
+  for (int i = 0; i < menuFListID.size(); ++i) {
+    if (menuFListID.at(i) == filter_id)
+          menuFList.at(i)->setChecked(true);
+  }
 
   if (!f)
     KMessageBox::error(knGlobals.topWidget, i18n("ERROR: no such filter."));
 }
+
 
 
 void KNFilterManager::slotShowFilterChooser()
@@ -374,7 +386,6 @@ void KNFilterManager::setMenuAction(KNFilterSelectAction *a, QAction *keybA)
 {
   if(a) {
     a_ctFilter = a;
-    connect(a_ctFilter, SIGNAL(activated(int)), this,  SLOT(slotMenuActivated(int)));
   }
   if(keybA)
     connect(keybA, SIGNAL(activated()), this,  SLOT(slotShowFilterChooser()));
