@@ -29,6 +29,10 @@
 
 int KNApplication::newInstance()
 {
+
+  QWidgetList widgetTList;
+  static KNMainWindow* mainWin;
+
   kDebug(5003) <<"KNApplication::newInstance()";
 
   KConfigGroup conf(knGlobals.config(), "GENERAL");
@@ -51,24 +55,23 @@ int KNApplication::newInstance()
       conf.writeEntry("Version", KNODE_VERSION);
   }
 
-  if (!mainWidget()) {
+  widgetTList = topLevelWidgets();
+
+   if (widgetTList.empty()) {
     if ( isSessionRestored() ) {
       int n = 1;
       while (KNMainWindow::canBeRestored(n)){
         if (KNMainWindow::classNameOfToplevel(n)=="KNMainWindow") {
-          KNMainWindow* mainWin = new KNMainWindow;
+          mainWin = new KNMainWindow;
           mainWin->restore(n);
-          if ( n == 1 )
-            setMainWidget( mainWin );
-          break;
         }
         n++;
       }
     }
 
-    if (!mainWidget()) {
-      KNMainWindow* mainWin = new KNMainWindow;
-      setMainWidget(mainWin);  // this makes the external viewer windows close on shutdown...
+
+    if (widgetTList.empty()) {
+      mainWin = new KNMainWindow;
       mainWin->show();
     }
   }
@@ -77,11 +80,10 @@ int KNApplication::newInstance()
   KUniqueApplication::newInstance();
 
   // process URLs...
-  KNMainWidget *w = static_cast<KNMainWindow*>(mainWidget())->mainWidget();
+  KNMainWidget *w = static_cast<KNMainWindow*>(mainWin)->mainWidget();
   w->handleCommandLine();
 
   kDebug(5003) <<"KNApplication::newInstance() done";
   return 0;
 }
-
 

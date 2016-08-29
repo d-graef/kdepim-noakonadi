@@ -34,12 +34,12 @@ int main(int argc, char* argv[])
   KCmdLineArgs::addCmdLineOptions( knode_options() );
   KUniqueApplication::addCmdLineOptions();
 
-  if (!KNApplication::start())
-    return 0;
+    if (!KNApplication::start()) {
+      return 0;
+    }
 
   KNApplication app;
 
   KNode::Utilities::Startup::loadLibrariesIconsAndTranslations();
-
   return app.exec();
 }
