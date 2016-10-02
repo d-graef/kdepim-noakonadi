@@ -15,7 +15,8 @@
 #ifndef KNGROUPBROWSER_H
 #define KNGROUPBROWSER_H
 
-#include <q3listview.h>
+
+#include <QTreeWidget>
 //Added by qt3to4:
 #include <QIcon>
 #include <QPixmap>
@@ -41,28 +42,32 @@ class KNGroupBrowser : public KDialog {
 
   public:
     /** Checkable list view item with special handling for displaying moderated groups. */
-    class CheckItem : public Q3CheckListItem {
+
+    class CheckItem4 : public QTreeWidgetItem {
 
       public:
-        CheckItem(Q3ListView *v, const KNGroupInfo &gi, KNGroupBrowser *b);
-        CheckItem(Q3ListViewItem *i, const KNGroupInfo &gi, KNGroupBrowser *b);
-        ~CheckItem();
+        CheckItem4(QTreeWidget *v, const KNGroupInfo &gi, KNGroupBrowser *b);
+        CheckItem4(QTreeWidgetItem *i, const KNGroupInfo &gi, KNGroupBrowser *b);
+        ~CheckItem4();
         void setChecked(bool c);
+        void stateChange(QTreeWidgetItem *item, int i);
 
         KNGroupInfo info;
 
       protected:
         void stateChange(bool s);
         KNGroupBrowser *browser;
+
     };
 
     /** List view item with special handling for displaying moderated groups. */
-    class GroupItem : public Q3ListViewItem {
+
+    class GroupItem4 : public QTreeWidgetItem {
 
       public:
-        GroupItem(Q3ListView *v, const KNGroupInfo &gi);
-        GroupItem(Q3ListViewItem *i, const KNGroupInfo &gi);
-        ~GroupItem();
+        GroupItem4(QTreeWidget *v, const KNGroupInfo &gi);
+        GroupItem4(QTreeWidgetItem *i, const KNGroupInfo &gi);
+        ~GroupItem4();
 
         KNGroupInfo info;
     };
@@ -72,7 +77,7 @@ class KNGroupBrowser : public KDialog {
     ~KNGroupBrowser();
 
     KNNntpAccount* account()const      { return a_ccount; }
-    virtual void itemChangedState(CheckItem *it, bool s)=0;
+    virtual void itemChangedState(CheckItem4 *it, bool s)=0;
 
   public slots:
     void slotReceiveList(KNGroupListData* d);
@@ -81,14 +86,14 @@ class KNGroupBrowser : public KDialog {
     void loadList(KNNntpAccount *a);
 
   protected:
-    virtual void updateItemState(CheckItem *it)=0;
+    virtual void updateItemState(CheckItem4 *it)=0;
     void changeItemState(const KNGroupInfo &gi, bool s);
-    bool itemInListView(Q3ListView *view, const KNGroupInfo &gi);
-    void removeListItem(Q3ListView *view, const KNGroupInfo &gi);
-    void createListItems(Q3ListViewItem *parent=0);
+    bool itemInListView(QTreeWidget *view, const KNGroupInfo &gi);
+    void removeListItem(QTreeWidget *view, const KNGroupInfo &gi);
+    void createListItems(QTreeWidgetItem *parent=0);
 
     QWidget *page;
-    Q3ListView *groupView;
+    QTreeWidget *groupView4;
     int delayedCenter;
     KLineEdit *filterEdit;
     QCheckBox *noTreeCB, *subCB, *newCB;
@@ -106,10 +111,9 @@ class KNGroupBrowser : public KDialog {
 
   protected slots:
     void slotLoadList();
-    void slotItemExpand(Q3ListViewItem *it);
-    void slotCenterDelayed();
+    void slotItemExpand(QTreeWidgetItem *it);
+//    void slotCenterDelayed();
     /** double click checks/unchecks (opens/closes) item */
-    void slotItemDoubleClicked(Q3ListViewItem *it);
     void slotFilter(const QString &txt);
     void slotTreeCBToggled();
     void slotSubCBToggled();
@@ -120,3 +124,4 @@ class KNGroupBrowser : public KDialog {
 };
 
 #endif
+

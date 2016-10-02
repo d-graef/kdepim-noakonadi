@@ -89,14 +89,12 @@ KNGroupBrowser::KNGroupBrowser(QWidget *parent, const QString &caption, KNNntpAc
   arrowBtn1->setFixedSize(35,30);
   arrowBtn2->setFixedSize(35,30);
 
-  groupView=new Q3ListView(page);
-  groupView->setRootIsDecorated(true);
-  groupView->addColumn(i18n("Name"));
-  groupView->addColumn(i18n("Description"));
-  groupView->setTreeStepSize(15);
+  groupView4=new QTreeWidget(page);
+  groupView4->setColumnCount(2);
+  QStringList group_view_columns;
+  group_view_columns << "Name" << "Description";
+  groupView4->setHeaderLabels(group_view_columns);
 
-  connect(groupView, SIGNAL(doubleClicked(Q3ListViewItem*)),
-          this, SLOT(slotItemDoubleClicked(Q3ListViewItem*)));
 
   //layout
   QGridLayout *topL=new QGridLayout(page);
@@ -122,7 +120,7 @@ KNGroupBrowser::KNGroupBrowser(QWidget *parent, const QString &caption, KNNntpAc
 
   listL->addWidget(leftLabel, 0,0);
   listL->addWidget(rightLabel, 0,2);
-  listL->addWidget(groupView, 1,0);
+  listL->addWidget(groupView4, 1,0);
   listL->addLayout(arrL, 1,1);
   listL->setRowStretch(1,1);
   listL->setColumnStretch(0,5);
@@ -134,8 +132,9 @@ KNGroupBrowser::KNGroupBrowser(QWidget *parent, const QString &caption, KNNntpAc
   //connect
   connect(filterEdit, SIGNAL(textChanged(const QString&)),
           SLOT(slotFilterTextChanged(const QString&)));
-  connect(groupView, SIGNAL(expanded(Q3ListViewItem*)),
-          SLOT(slotItemExpand(Q3ListViewItem*)));
+  connect(groupView4, SIGNAL(itemExpanded(QTreeWidgetItem*)),
+          SLOT(slotItemExpand(QTreeWidgetItem*)));
+
 
   connect(refilterTimer, SIGNAL(timeout()), SLOT(slotRefilter()));
   connect(noTreeCB, SIGNAL(clicked()), SLOT(slotTreeCBToggled()));
@@ -179,37 +178,51 @@ void KNGroupBrowser::slotReceiveList(KNGroupListData* d)
 
 void KNGroupBrowser::changeItemState(const KNGroupInfo &gi, bool s)
 {
-  Q3ListViewItemIterator it(groupView);
+  QTreeWidgetItemIterator it(groupView4, QTreeWidgetItemIterator::Checked);
 
-  for( ; it.current(); ++it)
-    if (it.current()->isSelectable() && (static_cast<CheckItem*>(it.current())->info==gi))
-      static_cast<CheckItem*>(it.current())->setChecked(s);
+   Qt::CheckState state;
+   if (s) {
+     state = Qt::Checked;
+   } else {
+     state = Qt::Unchecked;
+   }
+
+   while (*it) {
+       if ( static_cast<CheckItem4*>(*it)->info == gi ) {
+         static_cast<CheckItem4*>(*it)->setCheckState(0, state);
+       }
+     ++it;
+   }
 }
 
 
-bool KNGroupBrowser::itemInListView(Q3ListView *view, const KNGroupInfo &gi)
+bool KNGroupBrowser::itemInListView(QTreeWidget *view, const KNGroupInfo &gi)
 {
   if(!view) return false;
-  Q3ListViewItemIterator it(view);
 
-  for( ; it.current(); ++it)
-    if(static_cast<GroupItem*>(it.current())->info==gi)
-      return true;
-
+  QTreeWidgetItemIterator it(view);
+  while (*it) {
+    if ( static_cast<GroupItem4*>(*it)->info==gi ) {
+       return true;
+    }
+    ++it;
+  }
   return false;
 }
 
 
-void KNGroupBrowser::createListItems(Q3ListViewItem *parent)
+void KNGroupBrowser::createListItems(QTreeWidgetItem *parent)
 {
   QString prefix, tlgn, compare;
-  Q3ListViewItem *it;
-  CheckItem *cit;
+  QStringList tlgn_list;
+  QTreeWidgetItem *it;
+  CheckItem4 *cit;
+
   int colon;
   bool expandit=false;
 
   if(parent) {
-    Q3ListViewItem *p=parent;
+    QTreeWidgetItem *p=parent;
     while(p) {
       prefix.prepend(p->text(0));
       p=p->parent();
@@ -238,20 +251,31 @@ void KNGroupBrowser::createListItems(Q3ListViewItem *parent)
       }
 
       tlgn = compare.left(colon);
+      tlgn_list.clear();
+      tlgn_list.append(tlgn);
 
       if(expandit) {
-        if(parent)
-          it=new Q3ListViewItem(parent, tlgn);
-        else
-          it=new Q3ListViewItem(groupView, tlgn);
-        it->setSelectable(false);
-        it->setExpandable(true);
+        if(parent) {
+          it=new QTreeWidgetItem(parent, tlgn_list);
+        }
+        else {
+          it=new QTreeWidgetItem(groupView4, tlgn_list);
+        }
+          it->setFlags(Qt::NoItemFlags);
+          it->setFlags(Qt::ItemIsEnabled);
+          it->setChildIndicatorPolicy(QTreeWidgetItem::ShowIndicator);
       }
       else {
-        if(parent)
-          cit=new CheckItem(parent, gn, this);
-        else
-          cit=new CheckItem(groupView, gn, this);
+        if(parent) {
+          cit=new CheckItem4(parent, gn, this);
+          cit->setFlags(Qt::NoItemFlags);
+          cit->setFlags(Qt::ItemIsEnabled|Qt::ItemIsSelectable);
+        }
+        else {
+          cit=new CheckItem4(groupView4, gn, this);
+          cit->setFlags(Qt::NoItemFlags);
+          cit->setFlags(Qt::ItemIsEnabled|Qt::ItemIsSelectable);
+        }
         updateItemState(cit);
       }
     }
@@ -259,16 +283,18 @@ void KNGroupBrowser::createListItems(Q3ListViewItem *parent)
 }
 
 
-void KNGroupBrowser::removeListItem(Q3ListView *view, const KNGroupInfo &gi)
+void KNGroupBrowser::removeListItem(QTreeWidget *view, const KNGroupInfo &gi)
 {
   if(!view) return;
-  Q3ListViewItemIterator it(view);
 
-  for( ; it.current(); ++it)
-    if(static_cast<GroupItem*>(it.current())->info==gi) {
-      delete it.current();
+  QTreeWidgetItemIterator it(view);
+  while (*it) {
+    if ( static_cast<GroupItem4*>(*it)->info==gi ) {
+      delete *it;
       break;
     }
+    ++it;
+  }
 }
 
 
@@ -278,7 +304,7 @@ void KNGroupBrowser::slotLoadList()
 }
 
 
-void KNGroupBrowser::slotItemExpand(Q3ListViewItem *it)
+void KNGroupBrowser::slotItemExpand(QTreeWidgetItem *it)
 {
   if(!it) return;
 
@@ -288,40 +314,35 @@ void KNGroupBrowser::slotItemExpand(Q3ListViewItem *it)
   }
 
   createListItems(it);
-
+/*
   // center the item - smart scrolling
   delayedCenter = -1;
-  int y = groupView->itemPos(it);
+  int y = groupView4->itemPos(it);
   int h = it->height();
 
-  if ( (y+h*4+5) >= (groupView->contentsY()+groupView->visibleHeight()) )
+  if ( (y+h*4+5) >= (groupView4->contentsY()+groupView->visibleHeight()) )
   {
-    groupView->ensureVisible(groupView->contentsX(), y+h/2, 0, h/2);
+    groupView4->ensureVisible(groupView4->contentsX(), y+h/2, 0, h/2);
     delayedCenter = y+h/2;
     QTimer::singleShot(300, this, SLOT(slotCenterDelayed()));
   }
+*/
 }
 
-
+/*
 void KNGroupBrowser::slotCenterDelayed()
 {
   if (delayedCenter != -1)
-    groupView->ensureVisible(groupView->contentsX(), delayedCenter, 0, groupView->visibleHeight()/2);
+    groupView4->ensureVisible(groupView4->contentsX(), delayedCenter, 0, groupView4->visibleHeight()/2);
 }
-
-
-void KNGroupBrowser::slotItemDoubleClicked(Q3ListViewItem *it)
-{
-  if (it && (it->childCount()==0)) static_cast<CheckItem*>(it)->setOn(!static_cast<CheckItem*>(it)->isOn());
-}
-
+*/
 
 #define MIN_FOR_TREE 200
 void KNGroupBrowser::slotFilter(const QString &txt)
 {
   QString filtertxt = txt.toLower();
   QRegExp reg(filtertxt, Qt::CaseInsensitive, QRegExp::RegExp);
-  CheckItem *cit=0;
+  CheckItem4 *cit=0;
 
   bool notCheckSub = !subCB->isChecked();
   bool notCheckNew = !newCB->isChecked();
@@ -355,13 +376,16 @@ void KNGroupBrowser::slotFilter(const QString &txt)
     }
   }
 
-  groupView->clear();
+  groupView4->clear();
 
   if((matchList->count() < MIN_FOR_TREE) || noTreeCB->isChecked()) {
     Q_FOREACH(const KNGroupInfo& g, *matchList) {
-      cit=new CheckItem(groupView, g, this);
+      cit=new CheckItem4(groupView4, g, this);
+      cit->setFlags(Qt::NoItemFlags);
+      cit->setFlags(Qt::ItemIsEnabled|Qt::ItemIsSelectable);
       updateItemState(cit);
     }
+  groupView4->sortItems(0, Qt::AscendingOrder); 
   } else {
     createListItems();
   }
@@ -373,6 +397,7 @@ void KNGroupBrowser::slotFilter(const QString &txt)
 
   arrowBtn1->setEnabled(false);
   arrowBtn2->setEnabled(false);
+  groupView4->resizeColumnToContents(0);
 }
 
 
@@ -416,48 +441,62 @@ void KNGroupBrowser::slotRefilter()
 //=======================================================================================
 
 
-KNGroupBrowser::CheckItem::CheckItem(Q3ListView *v, const KNGroupInfo &gi, KNGroupBrowser *b) :
-  Q3CheckListItem(v, gi.name, Q3CheckListItem::CheckBox), info(gi), browser(b)
+KNGroupBrowser::CheckItem4::CheckItem4(QTreeWidget *v, const KNGroupInfo &gi, KNGroupBrowser *b) :
+  QTreeWidgetItem(v), info(gi), browser(b)
 {
+  setText(0, gi.name);      // set group name (column 0)
   QString des(gi.description);
   if (gi.status == KNGroup::moderated) {
-    setText(0,gi.name+" (m)");
+    setText(0, gi.name+" (m)");
     if (!des.toUpper().contains(i18n("moderated").toUpper()))
       des+=i18n(" (moderated)");
   }
-  setText(1,des);
+  setText(1, des);    // description of newsgroup
 }
 
 
-KNGroupBrowser::CheckItem::CheckItem(Q3ListViewItem *i, const KNGroupInfo &gi, KNGroupBrowser *b) :
-  Q3CheckListItem(i, gi.name, Q3CheckListItem::CheckBox), info(gi), browser(b)
+KNGroupBrowser::CheckItem4::CheckItem4(QTreeWidgetItem *i, const KNGroupInfo &gi, KNGroupBrowser *b) :
+  QTreeWidgetItem(i), info(gi), browser(b)
 {
+  setText(0, gi.name);      // set group name (column 0)
   QString des(gi.description);
   if (gi.status == KNGroup::moderated) {
-    setText(0,gi.name+" (m)");
+    setText(0, gi.name+" (m)");
     if (!des.toUpper().contains(i18n("moderated").toUpper()))
       des+=i18n(" (moderated)");
   }
-  setText(1,des);
+  setText(1, des);     // description of newsgroup
 }
 
 
-KNGroupBrowser::CheckItem::~CheckItem()
+KNGroupBrowser::CheckItem4::~CheckItem4()
 {
 }
 
 
-void KNGroupBrowser::CheckItem::setChecked(bool c)
+void KNGroupBrowser::CheckItem4::setChecked(bool c)
 {
   KNGroupBrowser *b=browser;
   browser=0;
-  Q3CheckListItem::setOn(c);
+  Qt::CheckState state(Qt::Unchecked);
+
+  if (c) state=Qt::Checked;
+
+  QTreeWidgetItem::setCheckState(0, state);
   browser=b;
 }
 
 
-void KNGroupBrowser::CheckItem::stateChange(bool s)
+void KNGroupBrowser::CheckItem4::stateChange(bool s)
 {
+
+// In Qt3 this function is called when checkbox state has changed: http://doc.qt.io/qt-4.8/q3checklistitem.html#stateChange
+// No direct substitution in Qt4
+// Possible solution:
+// Reimplement setData() as described here:
+// http://stackoverflow.com/questions/9686648/is-it-possible-to-create-a-signal-for-when-a-qtreewidgetitem-checkbox-is-toggled
+// SIGNAL itemChanged() (QTreeWidget) is emitted for any change, including the checkbox. But: how to distinguish?
+
   if(browser) {
     kDebug(5003) <<"KNGroupBrowser::CheckItem::stateChange()";
     browser->itemChangedState(this, s);
@@ -467,25 +506,23 @@ void KNGroupBrowser::CheckItem::stateChange(bool s)
 
 //=======================================================================================
 
-
-KNGroupBrowser::GroupItem::GroupItem(Q3ListView *v, const KNGroupInfo &gi)
- : Q3ListViewItem(v, gi.name), info(gi)
+KNGroupBrowser::GroupItem4::GroupItem4(QTreeWidget *v, const KNGroupInfo &gi)
+  : QTreeWidgetItem(v), info(gi)
 {
+  setText(0, gi.name);
   if (gi.status == KNGroup::moderated)
-    setText(0,gi.name+" (m)");
+    setText(0, gi.name+" (m)");
 }
 
+KNGroupBrowser::GroupItem4::GroupItem4(QTreeWidgetItem *i, const KNGroupInfo &gi)
+  : QTreeWidgetItem(i), info(gi)
+{
+  setText(0, gi.name);
+}
 
-KNGroupBrowser::GroupItem::GroupItem(Q3ListViewItem *i, const KNGroupInfo &gi)
- : Q3ListViewItem(i, gi.name), info(gi)
+KNGroupBrowser::GroupItem4::~GroupItem4()
 {
 }
-
-
-KNGroupBrowser::GroupItem::~GroupItem()
-{
-}
-
 
 //-----------------------------------------
 

@@ -30,14 +30,14 @@ class KNGroupSelectDialog : public KNGroupBrowser {
     ~KNGroupSelectDialog();
 
     QString selectedGroups()const;
-    void itemChangedState(CheckItem *it, bool s);
+    void itemChangedState(CheckItem4 *it, bool s);
 
   protected:
-    void updateItemState(CheckItem *it);
-    Q3ListView *selView;
+    void updateItemState(CheckItem4 *it);
+    QTreeWidget *selView4;
 
   protected slots:
-    void slotItemSelected(Q3ListViewItem *it);
+    void slotItemSelected();
     /** deactivates the button when a root item is selected */
     void slotSelectionChanged();
     void slotArrowBtn1();
@@ -45,20 +45,4 @@ class KNGroupSelectDialog : public KNGroupBrowser {
 
 };
 
-
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

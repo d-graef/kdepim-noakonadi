@@ -38,28 +38,29 @@ KNGroupDialog::KNGroupDialog(QWidget *parent, KNNntpAccount *a) :
   KNGroupBrowser(parent, i18n("Subscribe to Newsgroups"),a, User1 | User2, true, i18n("New &List"), i18n("New &Groups...") )
 {
   rightLabel->setText(i18n("Current changes:"));
-  subView=new Q3ListView(page);
-  subView->addColumn(i18n("Subscribe To"));
-  unsubView=new Q3ListView(page);
-  unsubView->addColumn(i18n("Unsubscribe From"));
+  subView4=new QTreeWidget(page);
+  subView4->setHeaderLabel("subscribe to");
+  unsubView4=new QTreeWidget(page);
+  unsubView4->setHeaderLabel("unsubscribe from");
 
   QVBoxLayout *protL=new QVBoxLayout();
   protL->setSpacing(3);
   listL->addLayout(protL, 1,2);
-  protL->addWidget(subView);
-  protL->addWidget(unsubView);
+  protL->addWidget(subView4);
+  protL->addWidget(unsubView4);
 
   dir1=right;
   dir2=left;
 
-  connect(groupView, SIGNAL(selectionChanged(Q3ListViewItem*)),
-    this, SLOT(slotItemSelected(Q3ListViewItem*)));
-  connect(groupView, SIGNAL(selectionChanged()),
+  connect(groupView4, SIGNAL(itemSelectionChanged()),
+    this, SLOT(slotItemSelected4()));
+  connect(groupView4, SIGNAL(itemSelectionChanged()),
     this, SLOT(slotSelectionChanged()));
-  connect(subView, SIGNAL(selectionChanged(Q3ListViewItem*)),
-    this, SLOT(slotItemSelected(Q3ListViewItem*)));
-  connect(unsubView, SIGNAL(selectionChanged(Q3ListViewItem*)),
-    this, SLOT(slotItemSelected(Q3ListViewItem*)));
+
+  connect(subView4, SIGNAL(itemSelectionChanged()),
+    this, SLOT(slotItemSelected4()));
+  connect(unsubView4, SIGNAL(itemSelectionChanged()),
+    this, SLOT(slotItemSelected4()));
 
   connect(arrowBtn1, SIGNAL(clicked()), this, SLOT(slotArrowBtn1()));
   connect(arrowBtn2, SIGNAL(clicked()), this, SLOT(slotArrowBtn2()));
@@ -73,39 +74,38 @@ KNGroupDialog::KNGroupDialog(QWidget *parent, KNNntpAccount *a) :
 }
 
 
-
 KNGroupDialog::~KNGroupDialog()
 {
   KNHelper::saveWindowSize("groupDlg", this->size());
 }
 
 
-
-void KNGroupDialog::itemChangedState(CheckItem *it, bool s)
+void KNGroupDialog::itemChangedState(CheckItem4 *it, bool s)
 {
+
   kDebug(5003) <<"KNGroupDialog::itemChangedState()";
   if(s){
-    if(itemInListView(unsubView, it->info)) {
-      removeListItem(unsubView, it->info);
+    if(itemInListView(unsubView4, it->info)) {
+      removeListItem(unsubView4, it->info);
       setButtonDirection(btn2, right);
       arrowBtn1->setEnabled(false);
       arrowBtn2->setEnabled(true);
     }
     else {
-      new GroupItem(subView, it->info);
+      new GroupItem4(subView4, it->info);
       arrowBtn1->setEnabled(false);
       arrowBtn2->setEnabled(false);
     }
   }
   else {
-    if(itemInListView(subView, it->info)) {
-      removeListItem(subView, it->info);
+    if(itemInListView(subView4, it->info)) {
+      removeListItem(subView4, it->info);
       setButtonDirection(btn1, right);
       arrowBtn1->setEnabled(true);
       arrowBtn2->setEnabled(false);
     }
     else {
-      new GroupItem(unsubView, it->info);
+      new GroupItem4(unsubView4, it->info);
       arrowBtn1->setEnabled(false);
       arrowBtn2->setEnabled(false);
     }
@@ -113,16 +113,14 @@ void KNGroupDialog::itemChangedState(CheckItem *it, bool s)
 }
 
 
-
-void KNGroupDialog::updateItemState(CheckItem *it)
+void KNGroupDialog::updateItemState(CheckItem4 *it)
 {
-  it->setChecked( (it->info.subscribed && !itemInListView(unsubView, it->info)) ||
-                  (!it->info.subscribed && itemInListView(subView, it->info)) );
+  it->setChecked( (it->info.subscribed && !itemInListView(unsubView4, it->info)) ||
+                  (!it->info.subscribed && itemInListView(subView4, it->info)) );
 
-  if((it->info.subscribed || it->info.newGroup) && it->pixmap(0)==0)
-    it->setPixmap(0, (it->info.newGroup)? pmNew:pmGroup);
+/*  if((it->info.subscribed || it->info.newGroup) && it->pixmap(0)==0)
+    it->setPixmap(0, (it->info.newGroup)? pmNew:pmGroup);   */
 }
-
 
 
 void KNGroupDialog::toSubscribe(QList<KNGroupInfo> *l)
@@ -130,13 +128,17 @@ void KNGroupDialog::toSubscribe(QList<KNGroupInfo> *l)
   l->clear();
 
   bool moderated=false;
-  Q3ListViewItemIterator it(subView);
-  for(; it.current(); ++it) {
-    const KNGroupInfo& info = ((static_cast<GroupItem*>(it.current()))->info);
-    l->append(info);
-    if (info.status==KNGroup::moderated)
-      moderated=true;
-  }
+  QTreeWidgetItemIterator it(subView4);
+
+    while (*it)
+     {
+      const KNGroupInfo& info = ( (static_cast<GroupItem4*>(*it))->info );
+      l->append(info);
+      if (info.status==KNGroup::moderated)
+          moderated=true;
+       ++it;
+     }
+
   if (moderated)   // warn the user
      KMessageBox::information( knGlobals.topWidget,
        i18n("You have subscribed to a moderated newsgroup.\nYour articles will not appear in the group immediately.\nThey have to go through a moderation process."),
@@ -144,15 +146,17 @@ void KNGroupDialog::toSubscribe(QList<KNGroupInfo> *l)
 }
 
 
-
 void KNGroupDialog::toUnsubscribe(QStringList *l)
 {
   l->clear();
-  Q3ListViewItemIterator it(unsubView);
-  for(; it.current(); ++it)
-    l->append(((static_cast<GroupItem*>(it.current()))->info).name);
-}
+  QTreeWidgetItemIterator it(unsubView4);
 
+   while (*it)
+   {
+    l->append( ((static_cast<GroupItem4*>(*it))->info).name );
+    ++it;
+   }
+}
 
 
 void KNGroupDialog::setButtonDirection(arrowButton b, arrowDirection d)
@@ -176,37 +180,58 @@ void KNGroupDialog::setButtonDirection(arrowButton b, arrowDirection d)
 }
 
 
-
-void KNGroupDialog::slotItemSelected(Q3ListViewItem *it)
+void KNGroupDialog::slotItemSelected4()
 {
+
   const QObject *s=sender();
 
+   bool cFlag = false;
+   QTreeWidgetItem *it = 0;
+   QList<QTreeWidgetItem*> sel_it_list_s=subView4->selectedItems();
+   QList<QTreeWidgetItem*> sel_it_list_u=unsubView4->selectedItems();
+   QList<QTreeWidgetItem*> sel_it_list_g=groupView4->selectedItems();
 
-  if(s==subView) {
-    unsubView->clearSelection();
-    groupView->clearSelection();
+   if ( s==subView4 && (sel_it_list_s.count() == 0)) return;
+   if ( s==unsubView4 && (sel_it_list_u.count() == 0)) return;
+   if ( s==groupView4 && (sel_it_list_g.count() == 0)) return;
+
+   if(s==subView4) {
+     it=sel_it_list_s.at(0);
+   }
+   else if (s==unsubView4) {
+     it=sel_it_list_u.at(0);
+   }
+   else {                                 // must be groupView
+     it=sel_it_list_g.at(0);
+   }
+
+  if(s==subView4) {
+    unsubView4->clearSelection();
+    groupView4->clearSelection();
     arrowBtn2->setEnabled(false);
     arrowBtn1->setEnabled(true);
     setButtonDirection(btn1, left);
   }
-  else if(s==unsubView) {
-    subView->clearSelection();
-    groupView->clearSelection();
+  else if(s==unsubView4) {
+    subView4->clearSelection();
+    groupView4->clearSelection();
     arrowBtn1->setEnabled(false);
     arrowBtn2->setEnabled(true);
     setButtonDirection(btn2, left);
   }
   else {
-    CheckItem *cit;
-    subView->clearSelection();
-    unsubView->clearSelection();
-    cit=static_cast<CheckItem*>(it);
-    if(!cit->isOn() && !itemInListView(subView, cit->info) && !itemInListView(unsubView, cit->info)) {
+    CheckItem4 *cit;
+    subView4->clearSelection();
+    unsubView4->clearSelection();
+    cit=static_cast<CheckItem4*>(it);
+    Qt::CheckState state=cit->checkState(0);
+    if (state == Qt::Checked) cFlag = true;
+    if(!cFlag && !itemInListView(subView4, cit->info) && !itemInListView(unsubView4, cit->info)) {
       arrowBtn1->setEnabled(true);
       arrowBtn2->setEnabled(false);
       setButtonDirection(btn1, right);
     }
-    else if(cit->isOn() && !itemInListView(unsubView, cit->info) && !itemInListView(subView, cit->info)) {
+    else if(cFlag && !itemInListView(unsubView4, cit->info) && !itemInListView(subView4, cit->info)) {
       arrowBtn2->setEnabled(true);
       arrowBtn1->setEnabled(false);
       setButtonDirection(btn2, right);
@@ -218,33 +243,44 @@ void KNGroupDialog::slotItemSelected(Q3ListViewItem *it)
   }
 }
 
-
-
 void KNGroupDialog::slotSelectionChanged()
 {
-  if (!groupView->selectedItem())
-    arrowBtn1->setEnabled(false);
-}
+  QList<QTreeWidgetItem*> item_list;
+  item_list = groupView4->selectedItems();
 
+    if ( item_list.isEmpty() ) {
+        arrowBtn1->setEnabled(false);
+    } else {
+        if (item_list.at(0)->checkState(0) != Qt::Checked) {
+          arrowBtn1->setEnabled(true);
+        }
+    }
+}
 
 
 void KNGroupDialog::slotArrowBtn1()
 {
   if(dir1==right) {
-    CheckItem *it=static_cast<CheckItem*>(groupView->selectedItem());
-    if (it) {
-      new GroupItem(subView, it->info);
-      it->setChecked(true);
-    }
-  }
-  else {
-    GroupItem *it=static_cast<GroupItem*>(subView->selectedItem());
-    if (it) {
-      changeItemState(it->info, false);
-      delete it;
-    }
-  }
+    QList<QTreeWidgetItem*> sel_it_list_gw=groupView4->selectedItems();
 
+    if ( sel_it_list_gw.count() != 0 ) {
+      GroupItem4 *pGI_gw4=static_cast<GroupItem4*>(sel_it_list_gw.at(0));
+      if (pGI_gw4->childCount() == 0) {
+      new GroupItem4(subView4, pGI_gw4->info);
+      pGI_gw4->setCheckState(0, Qt::Checked);
+    }
+   }
+ }
+  else {
+    QList<QTreeWidgetItem*> sel_it_list=subView4->selectedItems();
+    GroupItem4 *pGI4=static_cast<GroupItem4*>(sel_it_list.at(0));
+
+    if ( sel_it_list.count() != 0 ) {
+       changeItemState(pGI4->info, false);
+       delete sel_it_list.at(0);
+    }
+  }
+  subView4->clearSelection();
   arrowBtn1->setEnabled(false);
 }
 
@@ -252,20 +288,22 @@ void KNGroupDialog::slotArrowBtn1()
 void KNGroupDialog::slotArrowBtn2()
 {
   if(dir2==right) {
-    CheckItem *it=static_cast<CheckItem*>(groupView->selectedItem());
-    if (it) {
-      new GroupItem(unsubView, it->info);
-      it->setChecked(false);
+    QList<QTreeWidgetItem*> sel_it_list_gw=groupView4->selectedItems();
+    CheckItem4 *pCI4=static_cast<CheckItem4*>(sel_it_list_gw.at(0));
+
+    if (pCI4) {
+      new GroupItem4(unsubView4, pCI4->info);
+      pCI4->setCheckState(0, Qt::Unchecked);
     }
   }
   else {
-    GroupItem *it=static_cast<GroupItem*>(unsubView->selectedItem());
-    if (it) {
-      changeItemState(it->info, true);
-      delete it;
+    QList<QTreeWidgetItem*> sel_it_list=unsubView4->selectedItems();
+    GroupItem4 *pGI4=static_cast<GroupItem4*>(sel_it_list.at(0));
+    if (pGI4) {
+      changeItemState(pGI4->info, true);
+      delete pGI4;
     }
   }
-
   arrowBtn2->setEnabled(false);
 }
 

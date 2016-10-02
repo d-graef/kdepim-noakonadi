@@ -33,15 +33,15 @@ class KNGroupDialog : public KNGroupBrowser {
   protected:
     enum arrowDirection { right, left };
     enum arrowButton { btn1, btn2 };
-    void updateItemState(CheckItem *it);
-    void itemChangedState(CheckItem *it, bool s);
+    void updateItemState(CheckItem4 *it);
+    void itemChangedState(CheckItem4 *it, bool s);
     void setButtonDirection(arrowButton b, arrowDirection d);
     QPushButton *newListBtn;
-    Q3ListView *subView, *unsubView;
+    QTreeWidget *subView4, *unsubView4;
     arrowDirection dir1, dir2;
-  KDatePicker *dateSel;
+    KDatePicker *dateSel;
   protected slots:
-    void slotItemSelected(Q3ListViewItem *it);
+    void slotItemSelected4();
     /** deactivates the button when a root item is selected */
     void slotSelectionChanged();
     void slotArrowBtn1();
