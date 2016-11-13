@@ -294,7 +294,6 @@ void KNHeaderView::incCurrentArticle()
   QTreeWidgetItem *lvi = currentItem();
   QTreeWidget *headerView = lvi->treeWidget();
 
-//  if ( lvi && lvi->isExpandable() )
   if ( lvi && (lvi->childCount() > 0) )
     lvi->setExpanded( true );
   if ( lvi && headerView->itemBelow(lvi) ) {

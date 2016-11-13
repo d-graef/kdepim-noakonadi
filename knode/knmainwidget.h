@@ -22,13 +22,12 @@
 #include <QList>
 
 
-// class Q3ListViewItem;
 class QLineEdit;
 class QSplitter;
 class QTreeWidget;
 class QTreeWidgetItem;
 
-// class K3ListView;
+
 class KUrl;
 class KAction;
 class KToggleAction;
