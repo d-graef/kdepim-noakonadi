@@ -125,8 +125,7 @@ class KNArticleManager : public QObject, public KNJobConsumer {
   public slots:
     void slotFilterChanged(KNArticleFilter *f);
     void slotSearchDialogDone();
-//    void slotItemExpanded(Q3ListViewItem *p);
-    void slotItemExpanded(QTreeWidgetItem *p);       //    @dg
+    void slotItemExpanded(QTreeWidgetItem *p);
 
 };
 

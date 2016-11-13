@@ -137,13 +137,12 @@ KNMainWidget::KNMainWidget( KXMLGUIClient* client, QWidget* parent ) :
   vlay->setSpacing( 0 );
   vlay->setMargin( 0 );
   h_drView = new KNHeaderView( dummy );
-  h_drView->setContextMenuPolicy(Qt::CustomContextMenu);     //     @dg
+  h_drView->setContextMenuPolicy(Qt::CustomContextMenu);
 
   q_uicksearch = new KToolBar( dummy );
   QLabel *lbl = new QLabel(i18n("&Search:"),dummy);
   lbl->setObjectName( QLatin1String("kde toolbar widget" ));
   q_uicksearch->addWidget( lbl );
-//  s_earchLineEdit = new K3ListViewSearchLine( q_uicksearch, h_drView );
   s_earchLineEdit = new KTreeWidgetSearchLine( q_uicksearch, h_drView );
   q_uicksearch->addWidget( s_earchLineEdit );
   lbl->setBuddy(s_earchLineEdit);
@@ -151,16 +150,10 @@ KNMainWidget::KNMainWidget( KXMLGUIClient* client, QWidget* parent ) :
   vlay->addWidget(q_uicksearch);
   vlay->addWidget(h_drView);
 
-//  connect(h_drView, SIGNAL(itemSelected(QTreeWidgetItem*)),     // @dg single selection, obsolete in QTreeView
-//          SLOT(slotArticleSelected(QTreeWidgetItem*)));
-//  connect(h_drView, SIGNAL(selectionChanged()),
-//          SLOT(slotArticleSelectionChanged()));     //   @dg
-  connect(h_drView, SIGNAL(itemSelectionChanged()),    // @dg single & multiple selections
+  connect(h_drView, SIGNAL(itemSelectionChanged()),    // single & multiple selections
           SLOT(slotArticleSelectionChanged()));
 
-//  connect(h_drView, SIGNAL(contextMenu(K3ListView*, QTreeWidgetItem*, const QPoint&)),
-//          SLOT(slotArticleRMB(K3ListView*, QTreeWidgetItem*, const QPoint&)));               //   @dg
-  connect(h_drView, SIGNAL(customContextMenuRequested(const QPoint&)),       // @dg
+  connect(h_drView, SIGNAL(customContextMenuRequested(const QPoint&)),
           SLOT(slotArticleRMB(const QPoint&)));
 
   connect(h_drView, SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)),
@@ -1055,7 +1048,7 @@ void KNMainWidget::getSelectedArticles(KNRemoteArticle::List &l)
 {
   if(!g_rpManager->currentGroup()) return;
 
-  for(QTreeWidgetItem *i=h_drView->topLevelItem(0); i; h_drView->itemBelow(i) /* i=i->itemBelow() */ )    // @dg
+  for(QTreeWidgetItem *i=h_drView->topLevelItem(0); i; h_drView->itemBelow(i))
     if(i->isSelected() || (static_cast<KNHdrViewItem*>(i)->isActive()))
       l.append( static_cast<KNRemoteArticle*> ((static_cast<KNHdrViewItem*>(i))->art) );
 }
@@ -1064,7 +1057,7 @@ void KNMainWidget::getSelectedArticles(KNRemoteArticle::List &l)
 void KNMainWidget::getSelectedThreads(KNRemoteArticle::List &l)
 {
   KNRemoteArticle *art;
-  for(QTreeWidgetItem *i=h_drView->topLevelItem(0); i; h_drView->itemBelow(i) /* i=i->itemBelow() */)
+  for(QTreeWidgetItem *i=h_drView->topLevelItem(0); i; h_drView->itemBelow(i))
     if(i->isSelected() || (static_cast<KNHdrViewItem*>(i)->isActive())) {
       art=static_cast<KNRemoteArticle*> ((static_cast<KNHdrViewItem*>(i))->art);
       // ignore the article if it is already in the list
@@ -1092,8 +1085,7 @@ void KNMainWidget::closeCurrentThread()
     while (item->parent())
       item = item->parent();
     h_drView->setCurrentItem(item);
-//    item->setOpen(false);      //   @dg
-    item->setExpanded(false);    // @dg
+    item->setExpanded(false);
 //    h_drView->ensureItemVisible(item);
     h_drView->scrollToItem(item);
   }
@@ -1721,7 +1713,6 @@ void KNMainWidget::slotArtCollapseAll()
   closeCurrentThread();
   a_rtManager->setAllThreadsOpen(false);
   if (h_drView->currentItem())
-//    h_drView->ensureItemVisible(h_drView->currentItem());     //    @dg
     h_drView->scrollToItem(h_drView->currentItem());
 }
 
@@ -1732,7 +1723,6 @@ void KNMainWidget::slotArtExpandAll()
 
   a_rtManager->setAllThreadsOpen(true);
   if (h_drView->currentItem())
-//    h_drView->ensureItemVisible(h_drView->currentItem());      //     @dg
     h_drView->scrollToItem(h_drView->currentItem());
 }
 
@@ -1740,11 +1730,8 @@ void KNMainWidget::slotArtExpandAll()
 void KNMainWidget::slotArtToggleThread()
 {
   kDebug(5003) <<"KNMainWidget::slotArtToggleThread()";
-//  if( mArticleViewer->article() && mArticleViewer->article()->listItem()->isExpandable() ) {       //     @dg
   if( mArticleViewer->article() && ( mArticleViewer->article()->listItem()->childCount() > 0 ) ) {
-//    bool o = !(mArticleViewer->article()->listItem()->isOpen());     //     @dg
     bool o = !(mArticleViewer->article()->listItem()->isExpanded());
-//    mArticleViewer->article()->listItem()->setOpen( o );    //    @dg
     mArticleViewer->article()->listItem()->setExpanded( o );
   }
 }

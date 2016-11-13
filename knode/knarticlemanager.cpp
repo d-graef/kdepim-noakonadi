@@ -250,16 +250,14 @@ void KNArticleManager::showHdrs(bool clear)
         } else {  // expandThreads == true */
             createThread(art);
             if ( expandThreads )
-//              art->listItem()->setOpen(true);
-              art->listItem()->setExpanded(true);        //    @dg
+              art->listItem()->setExpanded(true);
 //           }
 
         }
         else if(art->listItem()) {
           art->updateListItem();
           if (expandThreads)
-//            art->listItem()->setOpen(true);
-            art->listItem()->setExpanded(true);        //    @dg
+            art->listItem()->setExpanded(true);
         }
 
       }
@@ -373,11 +371,11 @@ void KNArticleManager::setAllThreadsOpen(bool b)
     for(int idx=0; idx<g_roup->length(); idx++) {
       art = g_roup->at(idx);
       if (art->listItem())
-        art->listItem()->setExpanded(b);       //    @dg
+        art->listItem()->setExpanded(b);
       else
         if (b && art->filterResult()) {
           createThread(art);
-          art->listItem()->setExpanded(true);       //     @dg
+          art->listItem()->setExpanded(true);
         }
     }
     d_isableExpander = false;

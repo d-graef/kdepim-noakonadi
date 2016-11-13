@@ -159,7 +159,7 @@ void KNHeaderView::writeConfigShowScore()
 }
 
 
-void KNHeaderView::setActive( QTreeWidgetItem *i )        //    @dg
+void KNHeaderView::setActive( QTreeWidgetItem *i )
 {
 
   KNHdrViewItem *item = static_cast<KNHdrViewItem*>( i );
@@ -276,7 +276,6 @@ void KNHeaderView::nextArticle()
 
 void KNHeaderView::prevArticle()
 {
-//  /*   @dg
   KNHdrViewItem *it = static_cast<KNHdrViewItem*>( currentItem() );
   QTreeWidget *headerView = it->treeWidget();
 
@@ -292,10 +291,8 @@ void KNHeaderView::prevArticle()
 
 void KNHeaderView::incCurrentArticle()
 {
-
-//  Q3ListViewItem *lvi = currentItem();
   QTreeWidgetItem *lvi = currentItem();
-  QTreeWidget *headerView = lvi->treeWidget();    //      @dg
+  QTreeWidget *headerView = lvi->treeWidget();
 
 //  if ( lvi && lvi->isExpandable() )
   if ( lvi && (lvi->childCount() > 0) )
@@ -309,9 +306,8 @@ void KNHeaderView::incCurrentArticle()
 
 void KNHeaderView::decCurrentArticle()
 {
-//  Q3ListViewItem *lvi = currentItem();
   QTreeWidgetItem *lvi = currentItem();
-  QTreeWidget *headerView = lvi->treeWidget();    //      @dg
+  QTreeWidget *headerView = lvi->treeWidget();
 
   if ( lvi && headerView->itemAbove(lvi) ) {
     if ( headerView->itemAbove(lvi)->childCount() > 0)
@@ -554,16 +550,15 @@ void KNHeaderView::contentsMouseDoubleClickEvent( QMouseEvent *e )
 {
   if (!e) return;
 
-//  Q3ListViewItem *i = itemAt( contentsToViewport(e->pos()) );
-/*  @dg
-  QTreeWidgetItem *i = itemAt( contentsToViewport(e->pos()) );       //    @dg
+/*
+  QTreeWidgetItem *i = itemAt( contentsToViewport(e->pos()) );
 
   if (i) {
     emit doubleClick( i );
     return;
   }
 */
-  contentsMouseDoubleClickEvent(e);     // @dg
+  contentsMouseDoubleClickEvent(e);
 }
 
 
@@ -571,8 +566,7 @@ void KNHeaderView::keyPressEvent(QKeyEvent *e)
 {
   if (!e) return;
 
-//  Q3ListViewItem *i = currentItem();
-  QTreeWidgetItem *i = currentItem();      //    @dg
+  QTreeWidgetItem *i = currentItem();
 
   switch(e->key()) {
     case Qt::Key_Space:
@@ -586,8 +580,7 @@ void KNHeaderView::keyPressEvent(QKeyEvent *e)
     break;
 
     default:
-//       K3ListView::keyPressEvent (e);   //  @dg
-      keyPressEvent(e);       //     @dg
+      keyPressEvent(e);
   }
 }
 

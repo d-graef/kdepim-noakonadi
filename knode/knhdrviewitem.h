@@ -16,7 +16,6 @@
 #define KNHDRVIEWITEM_H
 
 #include <QTreeWidget>
-//  #include <k3listview.h>
 #include "headerview.h"
 
 class KNArticle;
@@ -24,32 +23,26 @@ class KNHeaderView;
 
 
 /** Header view item. */
-// class KNHdrViewItem : public K3ListViewItem  {
-class KNHdrViewItem : public QTreeWidgetItem  {       //    @dg
+class KNHdrViewItem : public QTreeWidgetItem  {
 
   public:
     KNHdrViewItem( KNHeaderView *ref, KNArticle *a = 0 );
     KNHdrViewItem( KNHdrViewItem *ref, KNArticle *a = 0 );
     ~KNHdrViewItem();
 
-//    virtual int compare(Q3ListViewItem *i, int col, bool ascending) const;
-    virtual int compare(QTreeWidgetItem *i, int col, bool ascending) const;       //     @dg
-
-//    int width(const QFontMetrics &fm, const Q3ListView *lv, int column) const;
+    virtual int compare(QTreeWidgetItem *i, int col, bool ascending) const;
     int width(const QFontMetrics &fm, const QTreeWidget *lv, int column) const;
 
     virtual QString text( int col ) const;
 
     void expandChildren();
-//    void expandChildren(QTreeWidgetItem *item);    //   @dg
-    int depth(QTreeWidgetItem *item);    //   @dg
+    int depth(QTreeWidgetItem *item);
 
     void setActive( bool b )  { mActive = b; }
     bool isActive() const     { return mActive; }
 
     // DND
-//    Q3DragObject* dragObject();
-    QMimeData* dragObject();       //    @dg
+    QMimeData* dragObject();
 
     KNArticle *art;
     int countUnreadInThread();

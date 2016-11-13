@@ -306,13 +306,13 @@ void KNLocalArticle::updateListItem()
   int idx=0;
   KNode::Appearance *app=knGlobals.configManager()->appearance();
 
-  QIcon savedRemote(app->icon(KNode::Appearance::savedRemote));    //  @dg
+  QIcon savedRemote(app->icon(KNode::Appearance::savedRemote));
   QIcon canceledPosting(app->icon(KNode::Appearance::canceledPosting));
   QIcon posting(app->icon(KNode::Appearance::posting));
   QIcon mail(app->icon(KNode::Appearance::mail));
 
   if(isSavedRemoteArticle()) {
-    i_tem->setIcon(0, savedRemote);   //    @dg
+    i_tem->setIcon(0, savedRemote);
     Headers::Newsgroups *hdrNewsgroup = newsgroups( false );
     if ( hdrNewsgroup && !hdrNewsgroup->isEmpty() ) {
       tmp = hdrNewsgroup->asUnicodeString();
@@ -332,7 +332,7 @@ void KNLocalArticle::updateListItem()
     }
 
     if(doMail()) {
-      i_tem->setIcon(idx++, mail);         //     @dg
+      i_tem->setIcon(idx++, mail);
       if(doPost())
         tmp+=" / ";
       tmp += to()->asUnicodeString();

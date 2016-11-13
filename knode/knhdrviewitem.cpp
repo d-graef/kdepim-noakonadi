@@ -114,7 +114,7 @@ int KNHdrViewItem::compare( QTreeWidgetItem *i, int col, bool ) const
     case 4:
        date1 = art->date()->dateTime().toTime_t();
        date2 = otherArticle->date()->dateTime().toTime_t();
-       if (art->type() == KNArticle::ATremote && static_cast<KNHeaderView*>( treeWidget() )->sortByThreadChangeDate()) {    //   @dg
+       if (art->type() == KNArticle::ATremote && static_cast<KNHeaderView*>( treeWidget() )->sortByThreadChangeDate()) {
          if (static_cast<KNRemoteArticle*>( art )->subThreadChangeDate() > date1)
            date1 = static_cast<KNRemoteArticle*>( art )->subThreadChangeDate();
          if (static_cast<KNRemoteArticle*>( otherArticle )->subThreadChangeDate() > date2)
@@ -129,11 +129,10 @@ int KNHdrViewItem::compare( QTreeWidgetItem *i, int col, bool ) const
 }
 
 
-// int KNHdrViewItem::width( const QFontMetrics &fm, const Q3ListView *, int column ) const
-int KNHdrViewItem::width( const QFontMetrics &fm, const QTreeWidget *, int column ) const       //    @dg
+int KNHdrViewItem::width( const QFontMetrics &fm, const QTreeWidget *, int column ) const
 {
   int ret = fm.boundingRect( text(column) ).width();
-  const KPaintInfo *paintInfo = static_cast<KNHeaderView*>( treeWidget() )->paintInfo();    //    @dg
+  const KPaintInfo *paintInfo = static_cast<KNHeaderView*>( treeWidget() )->paintInfo();
 
   // all pixmaps are drawn in the first column
   if ( column == paintInfo->subCol ) {
@@ -182,7 +181,7 @@ QString KNHdrViewItem::text( int col ) const
 }
 
 
-QMimeData* KNHdrViewItem::dragObject()       //    @dg
+QMimeData* KNHdrViewItem::dragObject()
 {
 #ifdef __GNUC__
 #warning Enable this section again, once KNHdrView does not derive from K3ListView any more and can process QDrag (not Q3DragObject)

@@ -18,11 +18,7 @@
 #include <QMouseEvent>
 #include <QKeyEvent>
 #include <QEvent>
-
-// #include <k3listview.h>
-#include <QTreeWidget>         //   @dg
-// #include <QTreeView>          //  @dg
-// #include <KConfigGroup>        //   @dg
+#include <QTreeWidget>
 
 #include <kmime/kmime_dateformatter.h>
 
@@ -131,9 +127,7 @@ struct KPaintInfo {
 /** Header view, displays the article listing of the currently selected
  *  news group or folder.
  */
-// class KNHeaderView : public K3ListView  {
  class KNHeaderView : public QTreeWidget  {
-// class KNHeaderView : public QTreeView  {
 
   Q_OBJECT
 
@@ -143,11 +137,9 @@ struct KPaintInfo {
     KNHeaderView( QWidget *parent );
     ~KNHeaderView();
 
-//    void setActive( Q3ListViewItem *item );
-    void setActive( QTreeWidgetItem *item );          //     @dg
+    void setActive( QTreeWidgetItem *item );
     void clear();
 
-//    void ensureItemVisibleWithMargin( const Q3ListViewItem *i );
     void ensureItemVisibleWithMargin( const QTreeWidgetItem *i );
 
     virtual void setSorting( int column, bool ascending = true );
@@ -164,9 +156,7 @@ struct KPaintInfo {
     const KPaintInfo* paintInfo() const { return &mPaintInfo; }
 
   signals:
-//    void itemSelected( Q3ListViewItem* );
-//    void doubleClick( Q3ListViewItem* );
-    void itemSelected( QTreeWidgetItem* );     //    @dg
+    void itemSelected( QTreeWidgetItem* );
     void doubleClick( QTreeWidgetItem* );
     void sortingChanged( int );
 
@@ -193,8 +183,7 @@ struct KPaintInfo {
     void contentsMouseDoubleClickEvent( QMouseEvent *e );
     void keyPressEvent( QKeyEvent *e );
     bool eventFilter( QObject *, QEvent * );
-//    virtual Q3DragObject* dragObject();
-    virtual QMimeData* dragObject();    //     @dg
+    virtual QMimeData* dragObject();
 
   private:
     int mSortCol;
@@ -204,8 +193,7 @@ struct KPaintInfo {
     KNHdrViewItem *mActiveItem;
     KPaintInfo mPaintInfo;
     KMime::DateFormatter mDateFormatter;
-//    KMenu *mPopup;
-    QMenu *mPopup;      //    @dg
+    QMenu *mPopup;
     bool mShowingFolder;
     bool mInitDone;
     QAction * KnHwPmenuSize = 0;
@@ -215,8 +203,7 @@ struct KPaintInfo {
     void slotCenterDelayed();
     void slotSizeChanged( int, int, int );
     void resetCurrentTime();
-//    void slotColumnContextMenu(const QPoint&);    //     @dg
-    void slotMPopup(const QPoint &point);    //   @dg
+    void slotMPopup(const QPoint &point);
 
 };
 

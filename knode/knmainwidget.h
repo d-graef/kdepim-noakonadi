@@ -22,13 +22,13 @@
 #include <QList>
 
 
-class Q3ListViewItem;
+// class Q3ListViewItem;
 class QLineEdit;
 class QSplitter;
 class QTreeWidget;
 class QTreeWidgetItem;
 
-class K3ListView;
+// class K3ListView;
 class KUrl;
 class KAction;
 class KToggleAction;
@@ -210,20 +210,17 @@ protected:
 
 protected slots:
   //listview slots
-//  void slotArticleSelected(Q3ListViewItem*);
   void slotArticleSelected(QTreeWidgetItem*);
   void slotArticleSelectionChanged();
   /** Called when the selection collection changed. */
   void slotCollectionSelected();
   /** Called when a collection is renamed. */
   void slotCollectionRenamed( QTreeWidgetItem *i );
-//  void slotArticleRMB(K3ListView*, Q3ListViewItem *i, const QPoint &p);   //    @dg
   void slotArticleRMB(const QPoint &p);
   /** Display a menu on items of the collections view. */
   void slotCollectionRMB( QTreeWidgetItem *i, const QPoint &pos );
   /** Open selected article in own composer/reader window */
-//  void slotOpenArticle(Q3ListViewItem *item);      //    @dg
-  void slotOpenArticle(QTreeWidgetItem *item, int i);     //    @dg
+  void slotOpenArticle(QTreeWidgetItem *item, int i);
   void slotHdrViewSortingChanged(int i);
 
   //network slots
