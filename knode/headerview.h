@@ -19,7 +19,11 @@
 #include <QKeyEvent>
 #include <QEvent>
 
-#include <k3listview.h>
+// #include <k3listview.h>
+#include <QTreeWidget>         //   @dg
+// #include <QTreeView>          //  @dg
+// #include <KConfigGroup>        //   @dg
+
 #include <kmime/kmime_dateformatter.h>
 
 class KMenu;
@@ -46,7 +50,7 @@ struct KPaintInfo {
   KPaintInfo() :
     pixmapOn( false ),
 
-    showSize( false ),
+    showLines( false ),
     showAttachment( false ),
     showImportant( false ),
     showToAct( false ),
@@ -90,7 +94,7 @@ struct KPaintInfo {
   QColor colToAct;
   QColor colCloseToQuota;
 
-  bool showSize;
+  bool showLines;
   bool showAttachment;
   bool showImportant;
   bool showToAct;
@@ -127,7 +131,9 @@ struct KPaintInfo {
 /** Header view, displays the article listing of the currently selected
  *  news group or folder.
  */
-class KNHeaderView : public K3ListView  {
+// class KNHeaderView : public K3ListView  {
+ class KNHeaderView : public QTreeWidget  {
+// class KNHeaderView : public QTreeView  {
 
   Q_OBJECT
 
@@ -137,10 +143,12 @@ class KNHeaderView : public K3ListView  {
     KNHeaderView( QWidget *parent );
     ~KNHeaderView();
 
-    void setActive( Q3ListViewItem *item );
+//    void setActive( Q3ListViewItem *item );
+    void setActive( QTreeWidgetItem *item );          //     @dg
     void clear();
 
-    void ensureItemVisibleWithMargin( const Q3ListViewItem *i );
+//    void ensureItemVisibleWithMargin( const Q3ListViewItem *i );
+    void ensureItemVisibleWithMargin( const QTreeWidgetItem *i );
 
     virtual void setSorting( int column, bool ascending = true );
     bool sortByThreadChangeDate() const      { return mSortByThreadChangeDate; }
@@ -150,13 +158,16 @@ class KNHeaderView : public K3ListView  {
     bool nextUnreadThread();
 
     void readConfig();
-    void writeConfig();
+    void writeConfigShowLines();
+    void writeConfigShowScore();
 
     const KPaintInfo* paintInfo() const { return &mPaintInfo; }
 
   signals:
-    void itemSelected( Q3ListViewItem* );
-    void doubleClick( Q3ListViewItem* );
+//    void itemSelected( Q3ListViewItem* );
+//    void doubleClick( Q3ListViewItem* );
+    void itemSelected( QTreeWidgetItem* );     //    @dg
+    void doubleClick( QTreeWidgetItem* );
     void sortingChanged( int );
 
   public slots:
@@ -166,7 +177,7 @@ class KNHeaderView : public K3ListView  {
     void decCurrentArticle();
     void selectCurrentArticle();
 
-    void toggleColumnSize( bool mode );
+    void toggleColumnLines( bool mode );
     void toggleColumnScore( bool mode );
     void prepareForGroup();
     void prepareForFolder();
@@ -182,7 +193,8 @@ class KNHeaderView : public K3ListView  {
     void contentsMouseDoubleClickEvent( QMouseEvent *e );
     void keyPressEvent( QKeyEvent *e );
     bool eventFilter( QObject *, QEvent * );
-    virtual Q3DragObject* dragObject();
+//    virtual Q3DragObject* dragObject();
+    virtual QMimeData* dragObject();    //     @dg
 
   private:
     int mSortCol;
@@ -192,7 +204,8 @@ class KNHeaderView : public K3ListView  {
     KNHdrViewItem *mActiveItem;
     KPaintInfo mPaintInfo;
     KMime::DateFormatter mDateFormatter;
-    KMenu *mPopup;
+//    KMenu *mPopup;
+    QMenu *mPopup;      //    @dg
     bool mShowingFolder;
     bool mInitDone;
     QAction * KnHwPmenuSize = 0;
@@ -202,6 +215,8 @@ class KNHeaderView : public K3ListView  {
     void slotCenterDelayed();
     void slotSizeChanged( int, int, int );
     void resetCurrentTime();
+//    void slotColumnContextMenu(const QPoint&);    //     @dg
+    void slotMPopup(const QPoint &point);    //   @dg
 
 };
 

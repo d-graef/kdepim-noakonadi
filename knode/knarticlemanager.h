@@ -15,6 +15,7 @@
 #ifndef KNARTICLEMANAGER_H
 #define KNARTICLEMANAGER_H
 
+#include <QTreeWidget>
 #include <QList>
 
 #include "knjobdata.h"
@@ -124,7 +125,8 @@ class KNArticleManager : public QObject, public KNJobConsumer {
   public slots:
     void slotFilterChanged(KNArticleFilter *f);
     void slotSearchDialogDone();
-    void slotItemExpanded(Q3ListViewItem *p);
+//    void slotItemExpanded(Q3ListViewItem *p);
+    void slotItemExpanded(QTreeWidgetItem *p);       //    @dg
 
 };
 

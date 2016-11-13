@@ -13,9 +13,9 @@
 */
 
 #include <QCursor>
-#include <q3header.h>
-#include <q3stylesheet.h>
 #include <QTimer>
+#include <QHeaderView>
+
 //Added by qt3to4:
 #include <QKeyEvent>
 #include <QEvent>
@@ -36,7 +36,7 @@
 
 
 KNHeaderView::KNHeaderView( QWidget *parent ) :
-  K3ListView( parent ),
+  QTreeWidget(parent),
   mSortCol( -1 ),
   mSortAsc( true ),
   mSortByThreadChangeDate( false ),
@@ -45,44 +45,53 @@ KNHeaderView::KNHeaderView( QWidget *parent ) :
   mShowingFolder( false ),
   mInitDone( false )
 {
-  mPaintInfo.subCol    = addColumn( i18n("Subject"), 310 );
-  mPaintInfo.senderCol = addColumn( i18n("From"), 115 );
-  mPaintInfo.scoreCol  = addColumn( i18n("Score"), 42 );
-  mPaintInfo.sizeCol   = addColumn( i18n("Lines"), 42 );
-  mPaintInfo.dateCol   = addColumn( i18n("Date"), 102 );
+  setColumnCount(5);
+  QStringList header_view_columns;
+  header_view_columns << "Subject" << "From" << "Score" << "Lines" << "Date";
+  setHeaderLabels(header_view_columns);
+  setColumnWidth(0, 400);
+  setColumnWidth(1, 200);
 
-  setDropVisualizer( false );
-  setDropHighlighter( false );
-  setItemsRenameable( false );
-  setItemsMovable( false );
+  mPaintInfo.subCol    = 0;   //   subject
+  mPaintInfo.senderCol = 1;   //   from
+  mPaintInfo.scoreCol  = 2;   //   score
+  mPaintInfo.sizeCol   = 3;   //   lines
+  mPaintInfo.dateCol   = 4;   //   date
+
+//  setDropVisualizer( false );
+//  setDropHighlighter( false );
+//  setItemsRenameable( false );
+//  setItemsMovable( false );
   setAcceptDrops( false );
   setDragEnabled( true );
   setAllColumnsShowFocus( true );
-  setSelectionMode( Q3ListView::Extended );
-  setShowSortIndicator( true );
-  setShadeSortColumn ( true );
+  setSelectionMode(QAbstractItemView::ExtendedSelection);
+  setSortingEnabled(true);
+//  setShadeSortColumn ( true );
   setRootIsDecorated( true );
   setSorting( mPaintInfo.dateCol );
-  header()->setMovingEnabled( true );
-  setColumnAlignment( mPaintInfo.sizeCol, Qt::AlignRight );
-  setColumnAlignment( mPaintInfo.scoreCol, Qt::AlignRight );
+//  header()->setMovingEnabled( true );
 
   // due to our own column text squeezing we need to repaint on column resizing
-  disconnect( header(), SIGNAL(sizeChange(int, int, int)) );
-  connect( header(), SIGNAL(sizeChange(int, int, int)),
-           SLOT(slotSizeChanged(int, int, int)) );
+//  disconnect( header(), SIGNAL(sizeChange(int, int, int)) );
+//  connect( header(), SIGNAL(sizeChange(int, int, int)),
+//           SLOT(slotSizeChanged(int, int, int)) );
   
 // column selection RMB menu
-  mPopup = new KMenu( this );
-  mPopup->addTitle( i18n("View Columns") );
+  mPopup = new QMenu( this );
+  mPopup->setTitle( i18n("View Columns") );
   KnHwPmenuSize = mPopup->addAction( i18n("Line Count") );
   KnHwPmenuSize->setCheckable(true);
   KnHwPmenuScore = mPopup->addAction( i18n("Score") );
   KnHwPmenuScore->setCheckable(true);
 
-  connect( KnHwPmenuSize, SIGNAL(toggled(bool)), this, SLOT(toggleColumnSize(bool)) );
-  connect( KnHwPmenuScore, SIGNAL(toggled(bool)), this, SLOT(toggleColumnScore(bool)) );
+  QHeaderView *columnHeader = header();
+  columnHeader->setContextMenuPolicy(Qt::CustomContextMenu);
 
+  connect(columnHeader, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(slotMPopup(const QPoint&)));
+  
+  connect( KnHwPmenuSize, SIGNAL(toggled(bool)), this, SLOT(toggleColumnLines(bool)) );
+  connect( KnHwPmenuScore, SIGNAL(toggled(bool)), this, SLOT(toggleColumnScore(bool)) );
 
   // connect to the article manager
   connect( knGlobals.articleManager(), SIGNAL(aboutToShowGroup()), SLOT(prepareForGroup()) );
@@ -103,17 +112,17 @@ KNHeaderView::~KNHeaderView()
   // writeConfig();
 }
 
-
 void KNHeaderView::readConfig()
 {
+
   if ( !mInitDone ) {
     KConfigGroup conf(knGlobals.config(), "HeaderView" );
     mSortByThreadChangeDate = conf.readEntry( "sortByThreadChangeDate", false );
-    restoreLayout( knGlobals.config(), "HeaderView" );
+//    restoreLayout( knGlobals.config(), "HeaderView" );
     mInitDone = true;
   }
 
-  toggleColumnSize( knGlobals.settings()->showLines() );
+  toggleColumnLines( knGlobals.settings()->showLines() );
   if ( !mShowingFolder ) // score column is always hidden when showing a folder
     toggleColumnScore( knGlobals.settings()->showScore() );
 
@@ -124,25 +133,35 @@ void KNHeaderView::readConfig()
   p.setColor( QPalette::Base, knGlobals.settings()->backgroundColor() );
   p.setColor( QPalette::Text, knGlobals.settings()->textColor() );
   setPalette( p );
-  setAlternateBackground( knGlobals.settings()->alternateBackgroundColor() );
+//  setAlternateBackground( knGlobals.settings()->alternateBackgroundColor() );    //  function from K3ListView
   setFont( knGlobals.settings()->articleListFont() );
+
 }
 
 
-void KNHeaderView::writeConfig()
+void KNHeaderView::writeConfigShowLines()
 {
   KConfigGroup conf(knGlobals.config(), "HeaderView" );
   conf.writeEntry( "sortByThreadChangeDate", mSortByThreadChangeDate );
-  saveLayout( knGlobals.config(), "HeaderView" );
+//  saveLayout( knGlobals.config(), "HeaderView" );        //    saveLayout() function from K3ListView class
+  knGlobals.settings()->setShowLines( mPaintInfo.showLines );
+}
 
-  knGlobals.settings()->setShowLines( mPaintInfo.showSize );
+
+void KNHeaderView::writeConfigShowScore()
+{
+  KConfigGroup conf(knGlobals.config(), "HeaderView" );
+  conf.writeEntry( "sortByThreadChangeDate", mSortByThreadChangeDate );
+//  saveLayout( knGlobals.config(), "HeaderView" );        //      saveLayout() function from K3ListView class
+
   if ( !mShowingFolder ) // score column is always hidden when showing a folder
     knGlobals.settings()->setShowScore( mPaintInfo.showScore );
 }
 
 
-void KNHeaderView::setActive( Q3ListViewItem *i )
+void KNHeaderView::setActive( QTreeWidgetItem *i )        //    @dg
 {
+
   KNHdrViewItem *item = static_cast<KNHdrViewItem*>( i );
 
   if ( !item || item->isActive() )
@@ -150,12 +169,12 @@ void KNHeaderView::setActive( Q3ListViewItem *i )
 
   if ( mActiveItem ) {
     mActiveItem->setActive( false );
-    repaintItem( mActiveItem );
+//    repaintItem( mActiveItem );
     mActiveItem = 0;
   }
 
   item->setActive( true );
-  setSelected( item, true );
+//  setSelected( item, true );
   setCurrentItem( i );
   ensureItemVisibleWithMargin( i );
   mActiveItem = item;
@@ -166,22 +185,22 @@ void KNHeaderView::setActive( Q3ListViewItem *i )
 void KNHeaderView::clear()
 {
   mActiveItem = 0;
-  Q3ListView::clear();
+  QTreeWidget::clear();
 }
 
 
-void KNHeaderView::ensureItemVisibleWithMargin( const Q3ListViewItem *i )
+void KNHeaderView::ensureItemVisibleWithMargin( const QTreeWidgetItem *i )
 {
   if ( !i )
     return;
 
- Q3ListViewItem *parent = i->parent();
+  QTreeWidgetItem *parent = i->parent();
   while ( parent ) {
-    if ( !parent->isOpen() )
-      parent->setOpen( true );
+    if ( !parent->isExpanded() )
+      parent->setExpanded( true );
     parent = parent->parent();
   }
-
+/*
   mDelayedCenter = -1;
   int y = itemPos( i );
   int h = i->height();
@@ -196,13 +215,16 @@ void KNHeaderView::ensureItemVisibleWithMargin( const Q3ListViewItem *i )
   } else {
     ensureVisible( contentsX(), y + h/2, 0, h/2 );
   }
+*/
 }
 
 
 void KNHeaderView::slotCenterDelayed()
 {
+  /*     // Qt3 -> Qt4 fixme
   if ( mDelayedCenter != -1 )
     ensureVisible( contentsX(), mDelayedCenter, 0, visibleHeight() / 2 );
+  */
 }
 
 
@@ -217,72 +239,85 @@ void KNHeaderView::setSorting( int column, bool ascending )
     emit sortingChanged( column );
   }
 
-  K3ListView::setSorting( column, ascending );
-
+  sortByColumn( column, Qt::DescendingOrder );
+/*      // Qt3 -> Qt4 fixme
   if ( currentItem() )
     ensureItemVisible( currentItem() );
 
   if ( mSortByThreadChangeDate )
-    setColumnText( mPaintInfo.dateCol , i18n("Date (thread changed)") );
+    setHeaderLabel( mPaintInfo.dateCol , i18n("Date (thread changed)") );
   else
-    setColumnText( mPaintInfo.dateCol, i18n("Date") );
+    setHeaderLabel( mPaintInfo.dateCol, i18n("Date") );
+*/
 }
 
 
 void KNHeaderView::nextArticle()
 {
   KNHdrViewItem *it = static_cast<KNHdrViewItem*>( currentItem() );
+  QTreeWidget *headerView = it->treeWidget();
 
   if (it) {
     if (it->isActive()) {  // take current article, if not selected
-      if (it->isExpandable())
-        it->setOpen(true);
-      it = static_cast<KNHdrViewItem*>(it->itemBelow());
+      if (it->childCount() > 0 )
+        it->setExpanded(true);
+      it = static_cast<KNHdrViewItem*>(headerView->itemBelow(it));
     }
   } else
-    it = static_cast<KNHdrViewItem*>( firstChild() );
+    it = static_cast<KNHdrViewItem*>( topLevelItem(0) );
 
   if(it) {
     clearSelection();
     setActive( it );
-    setSelectionAnchor( currentItem() );
+//    setSelectionAnchor( currentItem() );
   }
 }
 
 
 void KNHeaderView::prevArticle()
 {
+//  /*   @dg
   KNHdrViewItem *it = static_cast<KNHdrViewItem*>( currentItem() );
+  QTreeWidget *headerView = it->treeWidget();
 
   if (it && it->isActive()) {  // take current article, if not selected
-    it = static_cast<KNHdrViewItem*>(it->itemAbove());
+    it = static_cast<KNHdrViewItem*>(headerView->itemAbove(it));
     clearSelection();
     setActive( it );
-    setSelectionAnchor( currentItem() );
+//    setSelectionAnchor( currentItem() );
   }
+//  */
 }
 
 
 void KNHeaderView::incCurrentArticle()
 {
-  Q3ListViewItem *lvi = currentItem();
-  if ( lvi && lvi->isExpandable() )
-    lvi->setOpen( true );
-  if ( lvi && lvi->itemBelow() ) {
-    setCurrentItem( lvi->itemBelow() );
-    ensureItemVisible( currentItem() );
+
+//  Q3ListViewItem *lvi = currentItem();
+  QTreeWidgetItem *lvi = currentItem();
+  QTreeWidget *headerView = lvi->treeWidget();    //      @dg
+
+//  if ( lvi && lvi->isExpandable() )
+  if ( lvi && (lvi->childCount() > 0) )
+    lvi->setExpanded( true );
+  if ( lvi && headerView->itemBelow(lvi) ) {
+    setCurrentItem( headerView->itemBelow(lvi) );
+//    ensureItemVisible( currentItem() );
     setFocus();
   }
 }
 
 void KNHeaderView::decCurrentArticle()
 {
-  Q3ListViewItem *lvi = currentItem();
-  if ( lvi && lvi->itemAbove() ) {
-    if ( lvi->itemAbove()->isExpandable() )
-      lvi->itemAbove()->setOpen( true );
-    setCurrentItem( lvi->itemAbove() );
-    ensureItemVisible( currentItem() );
+//  Q3ListViewItem *lvi = currentItem();
+  QTreeWidgetItem *lvi = currentItem();
+  QTreeWidget *headerView = lvi->treeWidget();    //      @dg
+
+  if ( lvi && headerView->itemAbove(lvi) ) {
+    if ( headerView->itemAbove(lvi)->childCount() > 0)
+      headerView->itemAbove(lvi)->setExpanded( true );
+    setCurrentItem( headerView->itemAbove(lvi) );
+//    ensureItemVisible( currentItem() );
     setFocus();
   }
 }
@@ -305,7 +340,9 @@ bool KNHeaderView::nextUnreadArticle()
 
   current = static_cast<KNHdrViewItem*>( currentItem() );
   if ( !current )
-    current = static_cast<KNHdrViewItem*>( firstChild() );
+    current = static_cast<KNHdrViewItem*>( topLevelItem(0) );
+
+  QTreeWidget *headerView = current->treeWidget();
 
   if(!current)
     return false;
@@ -315,9 +352,9 @@ bool KNHeaderView::nextUnreadArticle()
   if ( !current->isActive() && !art->isRead() ) // take current article, if unread & not selected
     next = current;
   else {
-    if ( current->isExpandable() && art->hasUnreadFollowUps() && !current->isOpen() )
-      setOpen( current, true );
-    next = static_cast<KNHdrViewItem*>( current->itemBelow() );
+    if ( (current->childCount() > 0) && art->hasUnreadFollowUps() && !current->isExpanded() )
+      current->setExpanded(true);
+    next = static_cast<KNHdrViewItem*>( headerView->itemBelow(current) );
   }
 
   while ( next ) {
@@ -325,16 +362,16 @@ bool KNHeaderView::nextUnreadArticle()
     if ( !art->isRead() )
       break;
     else {
-      if ( next->isExpandable() && art->hasUnreadFollowUps() && !next->isOpen() )
-        setOpen( next, true );
-      next = static_cast<KNHdrViewItem*>( next->itemBelow() );
+      if ( (next->childCount() > 0) && art->hasUnreadFollowUps() && !next->isExpanded() )
+        next->setExpanded(true);
+      next = static_cast<KNHdrViewItem*>( headerView->itemBelow(next) );
     }
   }
 
   if ( next ) {
     clearSelection();
     setActive( next );
-    setSelectionAnchor( currentItem() );
+//    setSelectionAnchor( currentItem() );
     return true;
   }
   return false;
@@ -351,26 +388,41 @@ bool KNHeaderView::nextUnreadThread()
 
   current = static_cast<KNHdrViewItem*>( currentItem() );
   if ( !current )
-    current = static_cast<KNHdrViewItem*>( firstChild() );
+    current = static_cast<KNHdrViewItem*>( topLevelItem(0) );
 
   if ( !current )
     return false;
+  QTreeWidget *headerView = current->treeWidget();
 
   art = static_cast<KNRemoteArticle*>( current->art );
 
-  if ( current->depth() == 0 && !current->isActive() && (!art->isRead() || art->hasUnreadFollowUps()) )
+  int depth = 0;
+
+  while(current != 0){
+   depth++;
+//   item = item->parent();
+  }
+
+//  if ( current->depth() == 0 && !current->isActive() && (!art->isRead() || art->hasUnreadFollowUps()) )
+  if ( depth == 0 && !current->isActive() && (!art->isRead() || art->hasUnreadFollowUps()) )
     next = current; // take current article, if unread & not selected
   else
-    next = static_cast<KNHdrViewItem*>( current->itemBelow() );
+
+    next = static_cast<KNHdrViewItem*>( headerView->itemBelow(current) );
 
   while ( next ) {
     art = static_cast<KNRemoteArticle*>( next->art );
+    depth = 0;
+  while(next != 0){
+   depth++;
+//   item = item->parent();
+  }
 
-    if ( next->depth() == 0 ) {
+    if ( depth == 0 ) {
       if ( !art->isRead() || art->hasUnreadFollowUps() )
         break;
     }
-    next = static_cast<KNHdrViewItem*>( next->itemBelow() );
+    next = static_cast<KNHdrViewItem*>( headerView->itemBelow(next) );
   }
 
   if ( next ) {
@@ -380,70 +432,74 @@ bool KNHeaderView::nextUnreadThread()
     else {
       clearSelection();
       setActive( next );
-      setSelectionAnchor( currentItem() );
+//      setSelectionAnchor( currentItem() );
     }
     return true;
   }
   return false;
 }
 
-
-void KNHeaderView::toggleColumnSize(bool mode) 
+void KNHeaderView::slotMPopup(const QPoint &point)
 {
-  bool *show = 0;
+  // Handle global position
+  QPoint globalPos = mapToGlobal(point);
+  // Show context menu at handling position
+  mPopup->exec(globalPos);
+}
+
+void KNHeaderView::toggleColumnLines(bool mode)
+{
   int  *col  = 0;
-  int  width = 0;
+  int  width = 42;
 
-  show  = &mPaintInfo.showSize;
+  mPaintInfo.showLines = mode;
   col   = &mPaintInfo.sizeCol;
-  width = 42;
 
-  *show = mode;
-  KnHwPmenuSize->setChecked(*show);
+  KnHwPmenuSize->setChecked(mode);
 
-  if (*show) {
-    header()->setResizeEnabled( true, *col );
+  if (mode) {
+    showColumn( *col );
     setColumnWidth( *col, width );
   }
   else {
-    header()->setResizeEnabled( false, *col );
-    header()->setStretchEnabled( false, *col );
+//    header()->setResizeEnabled( false, *col );
+//    header()->setStretchEnabled( false, *col );
     hideColumn( *col );
   }
-
-    writeConfig();
+    writeConfigShowLines();
 }
 
 void KNHeaderView::toggleColumnScore(bool mode)
 {
-  bool *show = 0;
   int  *col  = 0;
-  int  width = 0;
+  int  width = 42;
 
-  show  = &mPaintInfo.showScore;
+  mPaintInfo.showScore = mode;
   col   = &mPaintInfo.scoreCol;
-  width = 42;
 
-  *show = mode;
-  KnHwPmenuScore->setChecked(*show);
+  KnHwPmenuScore->setChecked(mode);
 
-  if (*show) {
-    header()->setResizeEnabled( true, *col );
+  if (mode) {
+//    header()->setResizeEnabled( true, *col );
+    showColumn( *col );
+    header()->setResizeMode(*col, QHeaderView::Interactive);
     setColumnWidth( *col, width );
   }
   else {
-    header()->setResizeEnabled( false, *col );
-    header()->setStretchEnabled( false, *col );
+//  header()->setResizeEnabled( false, *col );
+    header()->setResizeMode(*col, QHeaderView::Fixed);
+//    header()->setStretchEnabled( false, *col );
+//   setStretchLastSection(false);
     hideColumn( *col );
   }
-
-    writeConfig();
+    writeConfigShowScore();
 }
 
 void KNHeaderView::prepareForGroup()
 {
   mShowingFolder = false;
-  header()->setLabel( mPaintInfo.senderCol, i18n("From") );
+//  header()->setLabel( mPaintInfo.senderCol, i18n("From") );
+//  header()->setHeaderLabel( i18n("From") );
   toggleColumnScore( knGlobals.settings()->showScore() );
 }
 
@@ -451,7 +507,7 @@ void KNHeaderView::prepareForGroup()
 void KNHeaderView::prepareForFolder()
 {
   mShowingFolder = true;
-  header()->setLabel( mPaintInfo.senderCol, i18n("Newsgroups / To") );
+//  header()->setLabel( mPaintInfo.senderCol, i18n("Newsgroups / To") );
   toggleColumnScore( false ); // local folders have no score
 }
 
@@ -461,9 +517,9 @@ bool KNHeaderView::event( QEvent *e )
   // we don't want to have the alternate list background restored
   // to the system defaults!
   if (e->type() == QEvent::ApplicationPaletteChange)
-    return Q3ListView::event(e);
+    return QTreeWidget::event(e);
   else
-    return K3ListView::event(e);
+    return QTreeWidget::event(e);
 }
 
 void KNHeaderView::contentsMousePressEvent( QMouseEvent *e )
@@ -472,11 +528,14 @@ void KNHeaderView::contentsMousePressEvent( QMouseEvent *e )
 
   bool selectMode=(( e->modifiers() & Qt::ShiftModifier ) || ( e->modifiers() & Qt::ControlModifier ));
 
-  QPoint vp = contentsToViewport(e->pos());
-  Q3ListViewItem *i = itemAt(vp);
+//  QPoint vp = contentsToViewport(e->pos());
+//  QPoint vp = viewportEvent(e->pos());
 
-  K3ListView::contentsMousePressEvent( e );
+//  Q3ListViewItem *i = itemAt(vp);
+//  QTreeWidgetItem *i = itemAt(vp);
 
+  QTreeWidget::mousePressEvent( e );
+/*
   if ( i ) {
     int decoLeft = header()->sectionPos( 0 ) +
         treeStepSize() * ( (i->depth() - 1) + ( rootIsDecorated() ? 1 : 0) );
@@ -487,6 +546,7 @@ void KNHeaderView::contentsMousePressEvent( QMouseEvent *e )
     if( !selectMode && i->isSelected() && !rootDecoClicked )
       setActive( i );
   }
+  */
 }
 
 
@@ -494,13 +554,16 @@ void KNHeaderView::contentsMouseDoubleClickEvent( QMouseEvent *e )
 {
   if (!e) return;
 
-  Q3ListViewItem *i = itemAt( contentsToViewport(e->pos()) );
+//  Q3ListViewItem *i = itemAt( contentsToViewport(e->pos()) );
+/*  @dg
+  QTreeWidgetItem *i = itemAt( contentsToViewport(e->pos()) );       //    @dg
+
   if (i) {
     emit doubleClick( i );
     return;
   }
-
-  K3ListView::contentsMouseDoubleClickEvent( e );
+*/
+  contentsMouseDoubleClickEvent(e);     // @dg
 }
 
 
@@ -508,7 +571,8 @@ void KNHeaderView::keyPressEvent(QKeyEvent *e)
 {
   if (!e) return;
 
-  Q3ListViewItem *i = currentItem();
+//  Q3ListViewItem *i = currentItem();
+  QTreeWidgetItem *i = currentItem();      //    @dg
 
   switch(e->key()) {
     case Qt::Key_Space:
@@ -522,7 +586,8 @@ void KNHeaderView::keyPressEvent(QKeyEvent *e)
     break;
 
     default:
-      K3ListView::keyPressEvent (e);
+//       K3ListView::keyPressEvent (e);   //  @dg
+      keyPressEvent(e);       //     @dg
   }
 }
 
@@ -530,7 +595,8 @@ void KNHeaderView::keyPressEvent(QKeyEvent *e)
 #ifdef __GNUC__
 #warning Port this to QDrag once the view doesnot derive from K3ListView any more
 #endif
-Q3DragObject* KNHeaderView::dragObject()
+
+QMimeData* KNHeaderView::dragObject()
 {
   KNHdrViewItem *item = static_cast<KNHdrViewItem*>( itemAt(viewport()->mapFromGlobal(QCursor::pos())) );
   if (item)
@@ -542,7 +608,9 @@ Q3DragObject* KNHeaderView::dragObject()
 
 void KNHeaderView::slotSizeChanged( int section, int, int newSize )
 {
+/* //  Qt3 -> Qt4
   viewport()->repaint( header()->sectionPos(section), 0, newSize, visibleHeight() );
+ */
 }
 
 
@@ -551,13 +619,12 @@ bool KNHeaderView::eventFilter(QObject *o, QEvent *e)
   // right click on header
   if ( e->type() == QEvent::MouseButtonPress &&
        static_cast<QMouseEvent*>(e)->button() == Qt::RightButton &&
-       qobject_cast<Q3Header*>( o ) )
+       qobject_cast<QHeaderView*>( o ) )
   {
     mPopup->popup( static_cast<QMouseEvent*>(e)->globalPos() );
     return true;
   }
-
-  return K3ListView::eventFilter(o, e);
+  return QTreeWidget::eventFilter(o, e);
 }
 
 

@@ -22,7 +22,6 @@
 #include "utilities.h"
 #include "utils/locale.h"
 
-
 #include <klocale.h>
 #include <kcodecs.h>
 #include <kmimetype.h>
@@ -130,14 +129,46 @@ void KNRemoteArticle::initListItem()
 {
   if(!i_tem) return;
 
+  KNHdrViewItem *hdrVItem = static_cast<KNHdrViewItem*>(i_tem);       //  cast: overloaded text() function from KNHdrViewItem is called
+
   KMime::Types::Mailbox mbox;
   if ( !from()->isEmpty() ) {
     mbox = from()->mailboxes().first();
+
   }
   if ( mbox.hasName() )
     i_tem->setText( 1, mbox.name() );
   else
     i_tem->setText( 1, QString::fromLatin1( mbox.address() ) );
+
+  QString dateTimeStringS(hdrVItem->text(4));
+  QString dateTimeStringD;
+  QString tempString;
+
+  tempString = dateTimeStringS.mid(6, 4);  // year
+  dateTimeStringD.append(tempString);
+  dateTimeStringD.append("-");
+  tempString = dateTimeStringS.mid(3, 2);  // month
+  dateTimeStringD.append(tempString);
+  dateTimeStringD.append("-");
+  tempString = dateTimeStringS.mid(0, 2);  // day
+  dateTimeStringD.append(tempString);
+  dateTimeStringD.append("T");
+  tempString = dateTimeStringS.mid(11, 2);  // hour
+  dateTimeStringD.append(tempString);
+  dateTimeStringD.append(":");
+  tempString = dateTimeStringS.mid(14, 2);  // minute
+  dateTimeStringD.append(tempString);
+  dateTimeStringD.append(":");
+  dateTimeStringD.append("00");             // second
+
+  QVariant dateTime(dateTimeStringD);
+  bool convert_rc = dateTime.convert(QVariant::DateTime);
+
+  i_tem->setText(0, hdrVItem->text(0));     //   subject
+  i_tem->setText(2, hdrVItem->text(2));     //
+  i_tem->setText(3, hdrVItem->text(3));     //
+  i_tem->setData(4, Qt::DisplayRole, dateTime);     //    else sorting as string
 
   updateListItem();
 }
@@ -145,40 +176,49 @@ void KNRemoteArticle::initListItem()
 
 void KNRemoteArticle::updateListItem()
 {
+
   if(!i_tem) return;
 
   KNode::Appearance *app=knGlobals.configManager()->appearance();
 
+  QIcon greyBallChkd(app->icon(KNode::Appearance::greyBallChkd));
+  QIcon greyBall(app->icon(KNode::Appearance::greyBall));
+  QIcon redBallChkd(app->icon(KNode::Appearance::redBallChkd));
+  QIcon redBall(app->icon(KNode::Appearance::redBall));
+  QIcon newFups(app->icon(KNode::Appearance::newFups));
+  QIcon null(app->icon(KNode::Appearance::null));
+  QIcon eyes(app->icon(KNode::Appearance::eyes));
+  QIcon ignore(app->icon(KNode::Appearance::ignore));
+
   if(isRead()) {
     if(hasContent())
-      i_tem->setPixmap(0, app->icon(KNode::Appearance::greyBallChkd));
+      i_tem->setIcon(0, greyBallChkd);
     else
-      i_tem->setPixmap(0, app->icon(KNode::Appearance::greyBall));
+      i_tem->setIcon(0, greyBall);
   }
   else {
     if(hasContent())
-      i_tem->setPixmap(0,app->icon(KNode::Appearance::redBallChkd));
+      i_tem->setIcon(0, redBallChkd);
     else
-      i_tem->setPixmap(0, app->icon(KNode::Appearance::redBall));
+      i_tem->setIcon(0, redBall);
   }
 
   if(hasNewFollowUps())
-    i_tem->setPixmap(1, app->icon(KNode::Appearance::newFups));
+    i_tem->setIcon(1, newFups);
   else
-    i_tem->setPixmap(1, app->icon(KNode::Appearance::null));
+    i_tem->setIcon(1, null);
 
   if(isWatched())
-    i_tem->setPixmap(2, app->icon(KNode::Appearance::eyes));
+    i_tem->setIcon(2, eyes);
   else {
     if(isIgnored())
-      i_tem->setPixmap(2, app->icon(KNode::Appearance::ignore));
+      i_tem->setIcon(2, ignore);
     else
-      i_tem->setPixmap(2, app->icon(KNode::Appearance::null));
+      i_tem->setIcon(2, null);
   }
 
-  i_tem->setExpandable( (threadMode() && hasVisibleFollowUps()) );
-
-  i_tem->repaint(); //force repaint
+//  i_tem->setExpandable( (threadMode() && hasVisibleFollowUps()) );
+//  i_tem->repaint(); //force repaint
 }
 
 
@@ -266,8 +306,13 @@ void KNLocalArticle::updateListItem()
   int idx=0;
   KNode::Appearance *app=knGlobals.configManager()->appearance();
 
+  QIcon savedRemote(app->icon(KNode::Appearance::savedRemote));    //  @dg
+  QIcon canceledPosting(app->icon(KNode::Appearance::canceledPosting));
+  QIcon posting(app->icon(KNode::Appearance::posting));
+  QIcon mail(app->icon(KNode::Appearance::mail));
+
   if(isSavedRemoteArticle()) {
-    i_tem->setPixmap(0, app->icon(KNode::Appearance::savedRemote));
+    i_tem->setIcon(0, savedRemote);   //    @dg
     Headers::Newsgroups *hdrNewsgroup = newsgroups( false );
     if ( hdrNewsgroup && !hdrNewsgroup->isEmpty() ) {
       tmp = hdrNewsgroup->asUnicodeString();
@@ -281,13 +326,13 @@ void KNLocalArticle::updateListItem()
     if(doPost()) {
       tmp += newsgroups()->asUnicodeString();
       if(canceled())
-        i_tem->setPixmap(idx++, app->icon(KNode::Appearance::canceledPosting));
+        i_tem->setIcon(idx++, canceledPosting);
       else
-        i_tem->setPixmap(idx++, app->icon(KNode::Appearance::posting));
+        i_tem->setIcon(idx++, posting);
     }
 
     if(doMail()) {
-      i_tem->setPixmap(idx++, app->icon(KNode::Appearance::mail));
+      i_tem->setIcon(idx++, mail);         //     @dg
       if(doPost())
         tmp+=" / ";
       tmp += to()->asUnicodeString();

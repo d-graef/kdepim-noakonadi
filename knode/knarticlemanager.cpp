@@ -250,14 +250,16 @@ void KNArticleManager::showHdrs(bool clear)
         } else {  // expandThreads == true */
             createThread(art);
             if ( expandThreads )
-              art->listItem()->setOpen(true);
+//              art->listItem()->setOpen(true);
+              art->listItem()->setExpanded(true);        //    @dg
 //           }
 
         }
         else if(art->listItem()) {
           art->updateListItem();
           if (expandThreads)
-            art->listItem()->setOpen(true);
+//            art->listItem()->setOpen(true);
+            art->listItem()->setExpanded(true);        //    @dg
         }
 
       }
@@ -320,8 +322,8 @@ void KNArticleManager::showHdrs(bool clear)
 
   }
 
-  if(setFirstChild && v_iew->firstChild()) {
-    v_iew->setCurrentItem(v_iew->firstChild());
+  if(setFirstChild && v_iew->topLevelItem(0)) {
+    v_iew->setCurrentItem(v_iew->topLevelItem(0));
     knGlobals.top->articleViewer()->setArticle( 0 );
   }
 
@@ -371,11 +373,11 @@ void KNArticleManager::setAllThreadsOpen(bool b)
     for(int idx=0; idx<g_roup->length(); idx++) {
       art = g_roup->at(idx);
       if (art->listItem())
-        art->listItem()->setOpen(b);
+        art->listItem()->setExpanded(b);       //    @dg
       else
         if (b && art->filterResult()) {
           createThread(art);
-          art->listItem()->setOpen(true);
+          art->listItem()->setExpanded(true);       //     @dg
         }
     }
     d_isableExpander = false;
@@ -947,8 +949,9 @@ void KNArticleManager::createThread(KNRemoteArticle *a)
       createThread(ref);
     a->setListItem(new KNHdrViewItem(ref->listItem()));
   }
-  else
+  else {
     a->setListItem(new KNHdrViewItem(v_iew));
+  }
 
   a->setThreadMode( knGlobals.settings()->showThreads() );
   a->initListItem();
@@ -1047,8 +1050,9 @@ void KNArticleManager::slotSearchDialogDone()
 }
 
 
-void KNArticleManager::slotItemExpanded(Q3ListViewItem *p)
+void KNArticleManager::slotItemExpanded(QTreeWidgetItem *p)
 {
+
   if (d_isableExpander)  // we don't want to call this method recursively
     return;
   d_isableExpander = true;
@@ -1061,7 +1065,6 @@ void KNArticleManager::slotItemExpanded(Q3ListViewItem *p)
   top=static_cast<KNRemoteArticle*>(hdrItem->art);
 
   if (p->childCount() == 0) {
-
     knGlobals.top->setCursorBusy(true);
 
     for(int i=0; i<g_roup->count(); i++) {
@@ -1089,18 +1092,21 @@ void KNArticleManager::slotItemExpanded(Q3ListViewItem *p)
     knGlobals.top->setCursorBusy(false);
   }
 
-  if ( knGlobals.settings()->totalExpandThreads() )
+  if ( knGlobals.settings()->totalExpandThreads() ) {
     hdrItem->expandChildren();
-
+  }
   d_isableExpander = false;
+
 }
 
 
 void KNArticleManager::setView(KNHeaderView* v) {
+
   v_iew = v;
+
   if(v) {
-    connect(v, SIGNAL(expanded(Q3ListViewItem*)), this,
-      SLOT(slotItemExpanded(Q3ListViewItem*)));
+    connect(v, SIGNAL(itemExpanded(QTreeWidgetItem*)), this,
+      SLOT(slotItemExpanded(QTreeWidgetItem*)));
   }
 }
 

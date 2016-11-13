@@ -13,12 +13,12 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, US
 */
 
+
 #include <QDrag>
 #include <QPainter>
 #include <QPixmap>
 
 #include <kdebug.h>
-
 
 #include <libkdepim/kdepimprotocols.h>
 
@@ -31,14 +31,14 @@
 
 
 KNHdrViewItem::KNHdrViewItem( KNHeaderView *ref, KNArticle *a ) :
-  K3ListViewItem( ref )
+  QTreeWidgetItem( ref )
 {
   init( a );
 }
 
 
 KNHdrViewItem::KNHdrViewItem( KNHdrViewItem *ref, KNArticle *a ) :
-  K3ListViewItem( ref )
+  QTreeWidgetItem( ref )
 {
   init( a );
 }
@@ -56,7 +56,7 @@ void KNHdrViewItem::init( KNArticle *a )
 KNHdrViewItem::~KNHdrViewItem()
 {
   if (mActive) {
-    Q3ListView *lv = listView();
+    QTreeWidget *lv = treeWidget();
     if (lv)
       static_cast<KNHeaderView*>( lv )->activeRemoved();
   }
@@ -67,16 +67,29 @@ KNHdrViewItem::~KNHdrViewItem()
 
 void KNHdrViewItem::expandChildren()
 {
-  Q3ListViewItemIterator it( firstChild() );
-  for ( ; it.current(); ++it) {
-    if (it.current()->depth() <= depth())
+  QTreeWidgetItemIterator it( child(0) );
+
+  for ( ; *it; ++it) {
+    if (static_cast<KNHdrViewItem*>(*it)->depth(*it) <= depth(this))
       break;
-    it.current()->setOpen( true );
+    (*it)->setExpanded( true );
   }
 }
 
+int KNHdrViewItem::depth(QTreeWidgetItem *item) {
 
-int KNHdrViewItem::compare( Q3ListViewItem *i, int col, bool ) const
+   int depth = 0;
+   QTreeWidgetItem *QTWitem = item;
+
+   while(QTWitem != 0){
+   depth++;
+   QTWitem = QTWitem->parent();
+   }
+   return depth;
+}
+
+
+int KNHdrViewItem::compare( QTreeWidgetItem *i, int col, bool ) const
 {
   KNArticle *otherArticle = static_cast<KNHdrViewItem*>( i )->art;
   int diff = 0;
@@ -101,7 +114,7 @@ int KNHdrViewItem::compare( Q3ListViewItem *i, int col, bool ) const
     case 4:
        date1 = art->date()->dateTime().toTime_t();
        date2 = otherArticle->date()->dateTime().toTime_t();
-       if (art->type() == KNArticle::ATremote && static_cast<KNHeaderView*>( listView() )->sortByThreadChangeDate()) {
+       if (art->type() == KNArticle::ATremote && static_cast<KNHeaderView*>( treeWidget() )->sortByThreadChangeDate()) {    //   @dg
          if (static_cast<KNRemoteArticle*>( art )->subThreadChangeDate() > date1)
            date1 = static_cast<KNRemoteArticle*>( art )->subThreadChangeDate();
          if (static_cast<KNRemoteArticle*>( otherArticle )->subThreadChangeDate() > date2)
@@ -116,16 +129,17 @@ int KNHdrViewItem::compare( Q3ListViewItem *i, int col, bool ) const
 }
 
 
-int KNHdrViewItem::width( const QFontMetrics &fm, const Q3ListView *, int column ) const
+// int KNHdrViewItem::width( const QFontMetrics &fm, const Q3ListView *, int column ) const
+int KNHdrViewItem::width( const QFontMetrics &fm, const QTreeWidget *, int column ) const       //    @dg
 {
   int ret = fm.boundingRect( text(column) ).width();
-  const KPaintInfo *paintInfo = static_cast<KNHeaderView*>( listView() )->paintInfo();
+  const KPaintInfo *paintInfo = static_cast<KNHeaderView*>( treeWidget() )->paintInfo();    //    @dg
 
   // all pixmaps are drawn in the first column
   if ( column == paintInfo->subCol ) {
     const QPixmap *pm;
     for (int i = 0; i < 4; ++i) {
-      pm = pixmap( i );
+//      pm = pixmap( i );
       if (pm && !pm->isNull())
         ret += pm->width() + 3;
     }
@@ -139,7 +153,8 @@ QString KNHdrViewItem::text( int col ) const
 {
   if ( !art )
     return QString();
-  KNHeaderView *hv = static_cast<KNHeaderView*>( listView() );
+
+  KNHeaderView *hv = static_cast<KNHeaderView*>( treeWidget() );
 
   if ( col == hv->paintInfo()->subCol ) {
     return art->subject()->asUnicodeString();
@@ -163,11 +178,11 @@ QString KNHdrViewItem::text( int col ) const
   if ( col == hv->paintInfo()->dateCol ) {
     return hv->mDateFormatter.dateString( art->date()->dateTime().toTime_t() );
   } else
-    return K3ListViewItem::text( col );
+  return QTreeWidgetItem::text( col );
 }
 
 
-Q3DragObject* KNHdrViewItem::dragObject()
+QMimeData* KNHdrViewItem::dragObject()       //    @dg
 {
 #ifdef __GNUC__
 #warning Enable this section again, once KNHdrView does not derive from K3ListView any more and can process QDrag (not Q3DragObject)

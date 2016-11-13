@@ -193,7 +193,6 @@ class KNRemoteArticle : public KNArticle {
                    n_ewFups;         // number of the article's new follow-ups
     time_t s_ubThreadChangeDate;     // the last time the sub-thread of this article changed
                                      // i.e. when the last article arrived...
-
 }; // KNRemoteArticle
 
 

@@ -11,6 +11,7 @@
     along with this program; if not, write to the Free Software Foundation,
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, US
 */
+
 #include "knmainwidget.h"
 
 #include <Q3Accel>
@@ -33,7 +34,7 @@
 #include <kstatusbar.h>
 #include <klocale.h>
 #include <kcmdlineargs.h>
-#include <k3listviewsearchline.h>
+#include <ktreewidgetsearchline.h>
 #include <khbox.h>
 #include <kselectaction.h>
 #include <kstandardshortcut.h>
@@ -136,26 +137,34 @@ KNMainWidget::KNMainWidget( KXMLGUIClient* client, QWidget* parent ) :
   vlay->setSpacing( 0 );
   vlay->setMargin( 0 );
   h_drView = new KNHeaderView( dummy );
+  h_drView->setContextMenuPolicy(Qt::CustomContextMenu);     //     @dg
 
   q_uicksearch = new KToolBar( dummy );
   QLabel *lbl = new QLabel(i18n("&Search:"),dummy);
   lbl->setObjectName( QLatin1String("kde toolbar widget" ));
   q_uicksearch->addWidget( lbl );
-  s_earchLineEdit = new K3ListViewSearchLine( q_uicksearch, h_drView );
+//  s_earchLineEdit = new K3ListViewSearchLine( q_uicksearch, h_drView );
+  s_earchLineEdit = new KTreeWidgetSearchLine( q_uicksearch, h_drView );
   q_uicksearch->addWidget( s_earchLineEdit );
   lbl->setBuddy(s_earchLineEdit);
 
   vlay->addWidget(q_uicksearch);
   vlay->addWidget(h_drView);
 
-  connect(h_drView, SIGNAL(itemSelected(Q3ListViewItem*)),
-          SLOT(slotArticleSelected(Q3ListViewItem*)));
-  connect(h_drView, SIGNAL(selectionChanged()),
+//  connect(h_drView, SIGNAL(itemSelected(QTreeWidgetItem*)),     // @dg single selection, obsolete in QTreeView
+//          SLOT(slotArticleSelected(QTreeWidgetItem*)));
+//  connect(h_drView, SIGNAL(selectionChanged()),
+//          SLOT(slotArticleSelectionChanged()));     //   @dg
+  connect(h_drView, SIGNAL(itemSelectionChanged()),    // @dg single & multiple selections
           SLOT(slotArticleSelectionChanged()));
-  connect(h_drView, SIGNAL(contextMenu(K3ListView*, Q3ListViewItem*, const QPoint&)),
-          SLOT(slotArticleRMB(K3ListView*, Q3ListViewItem*, const QPoint&)));
-  connect(h_drView, SIGNAL(doubleClick(Q3ListViewItem *)),
-          SLOT(slotOpenArticle(Q3ListViewItem *)));
+
+//  connect(h_drView, SIGNAL(contextMenu(K3ListView*, QTreeWidgetItem*, const QPoint&)),
+//          SLOT(slotArticleRMB(K3ListView*, QTreeWidgetItem*, const QPoint&)));               //   @dg
+  connect(h_drView, SIGNAL(customContextMenuRequested(const QPoint&)),       // @dg
+          SLOT(slotArticleRMB(const QPoint&)));
+
+  connect(h_drView, SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)),
+          SLOT(slotOpenArticle(QTreeWidgetItem *, int)));
   connect(h_drView, SIGNAL(sortingChanged(int)),
           SLOT(slotHdrViewSortingChanged(int)));
 
@@ -928,7 +937,8 @@ void KNMainWidget::saveOptions()
   //saveMainWindowSettings(KGlobal::config(),"mainWindow_options");
 
   c_olView->writeConfig();
-  h_drView->writeConfig();
+  h_drView->writeConfigShowLines();
+  h_drView->writeConfigShowScore();
   mArticleViewer->writeConfig();
 
   KConfigGroup cfg( knGlobals.config(), "UI State" );
@@ -1035,7 +1045,7 @@ void KNMainWidget::getSelectedArticles(KNArticle::List &l)
   if(!g_rpManager->currentGroup() && !f_olManager->currentFolder())
     return;
 
-  for(Q3ListViewItem *i=h_drView->firstChild(); i; i=i->itemBelow())
+  for(QTreeWidgetItem *i=h_drView->topLevelItem(0); i; h_drView->itemBelow(i) /* i=i->itemBelow() */)
     if(i->isSelected() || (static_cast<KNHdrViewItem*>(i)->isActive()))
       l.append( static_cast<KNArticle*> ((static_cast<KNHdrViewItem*>(i))->art) );
 }
@@ -1045,7 +1055,7 @@ void KNMainWidget::getSelectedArticles(KNRemoteArticle::List &l)
 {
   if(!g_rpManager->currentGroup()) return;
 
-  for(Q3ListViewItem *i=h_drView->firstChild(); i; i=i->itemBelow())
+  for(QTreeWidgetItem *i=h_drView->topLevelItem(0); i; h_drView->itemBelow(i) /* i=i->itemBelow() */ )    // @dg
     if(i->isSelected() || (static_cast<KNHdrViewItem*>(i)->isActive()))
       l.append( static_cast<KNRemoteArticle*> ((static_cast<KNHdrViewItem*>(i))->art) );
 }
@@ -1054,7 +1064,7 @@ void KNMainWidget::getSelectedArticles(KNRemoteArticle::List &l)
 void KNMainWidget::getSelectedThreads(KNRemoteArticle::List &l)
 {
   KNRemoteArticle *art;
-  for(Q3ListViewItem *i=h_drView->firstChild(); i; i=i->itemBelow())
+  for(QTreeWidgetItem *i=h_drView->topLevelItem(0); i; h_drView->itemBelow(i) /* i=i->itemBelow() */)
     if(i->isSelected() || (static_cast<KNHdrViewItem*>(i)->isActive())) {
       art=static_cast<KNRemoteArticle*> ((static_cast<KNHdrViewItem*>(i))->art);
       // ignore the article if it is already in the list
@@ -1069,7 +1079,7 @@ void KNMainWidget::getSelectedArticles( KNLocalArticle::List &l )
 {
   if(!f_olManager->currentFolder()) return;
 
-  for(Q3ListViewItem *i=h_drView->firstChild(); i; i=i->itemBelow())
+  for(QTreeWidgetItem *i=h_drView->topLevelItem(0); i; h_drView->itemBelow(i) /* i=i->itemBelow() */)
     if(i->isSelected() || (static_cast<KNHdrViewItem*>(i)->isActive()))
       l.append( static_cast<KNLocalArticle*> ((static_cast<KNHdrViewItem*>(i))->art) );
 }
@@ -1077,17 +1087,19 @@ void KNMainWidget::getSelectedArticles( KNLocalArticle::List &l )
 
 void KNMainWidget::closeCurrentThread()
 {
-  Q3ListViewItem *item = h_drView->currentItem();
+  QTreeWidgetItem *item = h_drView->currentItem();
   if (item) {
     while (item->parent())
       item = item->parent();
     h_drView->setCurrentItem(item);
-    item->setOpen(false);
-    h_drView->ensureItemVisible(item);
+//    item->setOpen(false);      //   @dg
+    item->setExpanded(false);    // @dg
+//    h_drView->ensureItemVisible(item);
+    h_drView->scrollToItem(item);
   }
 }
 
-void KNMainWidget::slotArticleSelected(Q3ListViewItem *i)
+void KNMainWidget::slotArticleSelected(QTreeWidgetItem *i)
 {
   kDebug(5003) <<"KNMainWidget::slotArticleSelected(QListViewItem *i)";
   if(b_lockui)
@@ -1129,6 +1141,10 @@ void KNMainWidget::slotArticleSelectionChanged()
 {
   // enable all actions that work with multiple selection
 
+  QList<QTreeWidgetItem*> hdr_view_si = h_drView->selectedItems();
+
+  if (hdr_view_si.count() > 1) {
+
   //actions
   bool enabled = (g_rpManager->currentGroup()!=0);
 
@@ -1146,6 +1162,9 @@ void KNMainWidget::slotArticleSelectionChanged()
   enabled = (f_olManager->currentFolder()!=0);
   a_ctArtDelete->setEnabled(enabled);
   a_ctArtSendNow->setEnabled(enabled && (f_olManager->currentFolder()==f_olManager->outbox()));
+  } else {
+   slotArticleSelected(hdr_view_si.at(0));
+  }
 }
 
 
@@ -1287,10 +1306,14 @@ void KNMainWidget::slotCollectionRenamed(QTreeWidgetItem *i)
 }
 
 
-void KNMainWidget::slotArticleRMB(K3ListView*, Q3ListViewItem *i, const QPoint &p)
+void KNMainWidget::slotArticleRMB(const QPoint &p)
 {
   if(b_lockui)
     return;
+
+  QTreeWidgetItem *i = h_drView->itemAt(p);
+  // Handle global position
+  QPoint globalPos = h_drView->mapToGlobal(p);
 
   if(i) {
     QMenu *popup;
@@ -1301,7 +1324,7 @@ void KNMainWidget::slotArticleRMB(K3ListView*, Q3ListViewItem *i, const QPoint &
     }
 
     if ( popup )
-      popup->popup(p);
+      popup->exec(globalPos);
   }
 }
 
@@ -1331,7 +1354,7 @@ void KNMainWidget::slotCollectionRMB( QTreeWidgetItem *i, const QPoint &pos )
 }
 
 
-void KNMainWidget::slotOpenArticle(Q3ListViewItem *item)
+void KNMainWidget::slotOpenArticle(QTreeWidgetItem *item, int i)
 {
   if(b_lockui)
     return;
@@ -1698,7 +1721,8 @@ void KNMainWidget::slotArtCollapseAll()
   closeCurrentThread();
   a_rtManager->setAllThreadsOpen(false);
   if (h_drView->currentItem())
-    h_drView->ensureItemVisible(h_drView->currentItem());
+//    h_drView->ensureItemVisible(h_drView->currentItem());     //    @dg
+    h_drView->scrollToItem(h_drView->currentItem());
 }
 
 
@@ -1708,16 +1732,20 @@ void KNMainWidget::slotArtExpandAll()
 
   a_rtManager->setAllThreadsOpen(true);
   if (h_drView->currentItem())
-    h_drView->ensureItemVisible(h_drView->currentItem());
+//    h_drView->ensureItemVisible(h_drView->currentItem());      //     @dg
+    h_drView->scrollToItem(h_drView->currentItem());
 }
 
 
 void KNMainWidget::slotArtToggleThread()
 {
   kDebug(5003) <<"KNMainWidget::slotArtToggleThread()";
-  if( mArticleViewer->article() && mArticleViewer->article()->listItem()->isExpandable() ) {
-    bool o = !(mArticleViewer->article()->listItem()->isOpen());
-    mArticleViewer->article()->listItem()->setOpen( o );
+//  if( mArticleViewer->article() && mArticleViewer->article()->listItem()->isExpandable() ) {       //     @dg
+  if( mArticleViewer->article() && ( mArticleViewer->article()->listItem()->childCount() > 0 ) ) {
+//    bool o = !(mArticleViewer->article()->listItem()->isOpen());     //     @dg
+    bool o = !(mArticleViewer->article()->listItem()->isExpanded());
+//    mArticleViewer->article()->listItem()->setOpen( o );    //    @dg
+    mArticleViewer->article()->listItem()->setExpanded( o );
   }
 }
 
