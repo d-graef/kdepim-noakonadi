@@ -14,7 +14,6 @@
 
 #include "knmainwidget.h"
 
-#include <Q3Accel>
 #include <QEvent>
 #include <QLabel>
 #include <QVBoxLayout>
@@ -101,7 +100,15 @@ KNMainWidget::KNMainWidget( KXMLGUIClient* client, QWidget* parent ) :
   // this will enable keyboard-only actions like that don't appear in any menu
   //actionCollection()->setDefaultShortcutContext( Qt::WindowShortcut );
 
-  Q3Accel *accel = new Q3Accel( this );
+  QAction *ShortCutKeyUp = new QAction(this);
+  ShortCutKeyUp->setShortcut(Qt::Key_Up);
+  QAction *ShortCutKeyDown = new QAction(this);
+  ShortCutKeyDown->setShortcut(Qt::Key_Down);
+  QAction *ShortCutPageUp = new QAction(this);
+  ShortCutPageUp->setShortcut(Qt::Key_PageUp);
+  QAction *ShortCutPageDown = new QAction(this);
+  ShortCutPageDown->setShortcut(Qt::Key_PageDown);
+
   initStatusBar();
   setSpacing( 0 );
   setMargin( 0 );
@@ -126,10 +133,11 @@ KNMainWidget::KNMainWidget( KXMLGUIClient* client, QWidget* parent ) :
   connect( c_olView, SIGNAL(renamed(QTreeWidgetItem*)),
            this, SLOT(slotCollectionRenamed(QTreeWidgetItem*)) );
 
-  accel->connectItem( accel->insertItem(Qt::Key_Up), mArticleViewer, SLOT(scrollUp()) );
-  accel->connectItem( accel->insertItem(Qt::Key_Down), mArticleViewer, SLOT(scrollDown()) );
-  accel->connectItem( accel->insertItem(Qt::Key_PageUp), mArticleViewer, SLOT(scrollPrior()) );
-  accel->connectItem( accel->insertItem(Qt::Key_PageDown), mArticleViewer, SLOT(scrollNext()) );
+  connect( ShortCutKeyUp, SIGNAL(triggered()), mArticleViewer, SLOT(scrollUp()) );
+  connect( ShortCutKeyDown, SIGNAL(triggered()), mArticleViewer, SLOT(scrollDown()) );
+  connect( ShortCutPageUp, SIGNAL(triggered()), mArticleViewer, SLOT(scrollPrior()) );
+  connect( ShortCutPageDown, SIGNAL(triggered()), mArticleViewer, SLOT(scrollNext()) );
+
 
   //header view
   QWidget *dummy = new QWidget( mSecondSplitter );

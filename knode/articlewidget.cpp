@@ -11,6 +11,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, US
 */
 
+
 #include "articlewidget.h"
 
 #include "utils/locale.h"
