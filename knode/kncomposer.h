@@ -15,8 +15,7 @@
 #ifndef KNCOMPOSER_H
 #define KNCOMPOSER_H
 
-#include <k3listview.h>
-
+#include <QTreeWidget>
 #include <kxmlguiwindow.h>
 #include <kdialog.h>
 #include <QRegExp>
@@ -31,6 +30,8 @@
 #include <QMenu>
 #include <QDragEnterEvent>
 #include <QSplitter>
+
+
 
 #include <kprocess.h>
 #include <kabc/addresslineedit.h>
@@ -184,10 +185,10 @@ class KNComposer : public KXmlGuiWindow {
     void slotCancelEditor();
 
     // attachment list
-    void slotAttachmentPopup(K3ListView*, Q3ListViewItem *it, const QPoint &p);
-    void slotAttachmentSelected(Q3ListViewItem *it);
-    void slotAttachmentEdit(Q3ListViewItem *it);
-    void slotAttachmentRemove(Q3ListViewItem *it);
+    void slotAttachmentPopup(const QPoint &p);
+    void slotAttachmentSelected(QTreeWidgetItem *it, int i);
+    void slotAttachmentEdit(QTreeWidgetItem *it, int i);
+    void slotAttachmentRemove(QTreeWidgetItem *it);
 
     // spellcheck operation
     //void slotSpellStarted(K3Spell *);
@@ -283,7 +284,7 @@ private:
 #endif
 
 /** Attachment view of the message composer. */
-class KNComposer::AttachmentView : public K3ListView {
+class KNComposer::AttachmentView : public QTreeWidget {
 
   Q_OBJECT
 
@@ -295,15 +296,15 @@ class KNComposer::AttachmentView : public K3ListView {
     void keyPressEvent( QKeyEvent *e );
 
   signals:
-    void delPressed ( Q3ListViewItem * );      // the user used Key_Delete on a list view item
+    void delPressed ( QTreeWidgetItem * );      // the user used Key_Delete on a list view item
 };
 
 
 /** Attachment view item. */
-class KNComposer::AttachmentViewItem : public K3ListViewItem {
+class KNComposer::AttachmentViewItem : public QTreeWidgetItem {
 
   public:
-    AttachmentViewItem(K3ListView *v, KNAttachment *a);
+    AttachmentViewItem(QTreeWidget *v, KNAttachment *a);
     ~AttachmentViewItem();
 
   KNAttachment *attachment;

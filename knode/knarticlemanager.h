@@ -21,8 +21,6 @@
 #include "knjobdata.h"
 #include "knarticle.h"
 
-class Q3ListViewItem;
-
 class KTemporaryFile;
 
 class KNArticle;

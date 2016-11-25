@@ -12,7 +12,7 @@
     Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, US
 */
 
-#include <q3header.h>
+#include <QHeaderView>
 #include <QTextCodec>
 #include <QApplication>
 #include <QGridLayout>
@@ -195,6 +195,7 @@ KNComposer::KNComposer(KNLocalArticle *a, const QString &text, const QString &si
   connect(v_iew->c_ancelEditorBtn, SIGNAL(clicked()), SLOT(slotCancelEditor()));
   connect(v_iew->e_dit, SIGNAL(sigDragEnterEvent(QDragEnterEvent *)), SLOT(slotDragEnterEvent(QDragEnterEvent *)));
   connect(v_iew->e_dit, SIGNAL(sigDropEvent(QDropEvent *)), SLOT(slotDropEvent(QDropEvent *)));
+  // https://bugs.kde.org/show_bug.cgi?id=244184  (connect: No such signal KNComposerEditor::sigDragEnterEvent)
 
   //statusbar
   KStatusBar *sb=statusBar();
@@ -385,7 +386,7 @@ KNComposer::KNComposer(KNLocalArticle *a, const QString &text, const QString &si
   //attachment popup
   a_ttPopup=static_cast<QMenu*> (factory()->container("attachment_popup", this));
   if(!a_ttPopup) a_ttPopup = new QMenu();
-  slotAttachmentSelected(0);
+  slotAttachmentSelected(0, 0);
 
   //init
   initData(text);
@@ -841,9 +842,10 @@ bool KNComposer::applyChanges()
 
   if(a_ttChanged && (v_iew->a_ttView)) {
 
-    Q3ListViewItemIterator it(v_iew->a_ttView);
-    while(it.current()) {
-      a=(static_cast<AttachmentViewItem*> (it.current()))->attachment;
+    QTreeWidgetItemIterator it(v_iew->a_ttView);
+
+    for ( ; *it; ++it) {
+      a=(static_cast<AttachmentViewItem*> (*it))->attachment;
       if(a->hasChanged()) {
         if(a->isAttached())
           a->updateContentInfo();
@@ -1194,7 +1196,7 @@ void KNComposer::slotRemoveAttachment()
     }
     delete it;
 
-    if(v_iew->a_ttView->childCount()==0) {
+    if(v_iew->a_ttView->topLevelItemCount()==0) {
       KNHelper::saveWindowSize("composerAtt", size());
       v_iew->hideAttachmentView();
     }
@@ -1582,14 +1584,16 @@ void KNComposer::slotCancelEditor()
 }
 
 
-void KNComposer::slotAttachmentPopup(K3ListView*, Q3ListViewItem *it, const QPoint &p)
+void KNComposer::slotAttachmentPopup(const QPoint &p)
 {
+  QTreeWidgetItem *it = v_iew->a_ttView->itemAt(p);
+
   if(it)
     a_ttPopup->popup(p);
 }
 
 
-void KNComposer::slotAttachmentSelected(Q3ListViewItem *it)
+void KNComposer::slotAttachmentSelected(QTreeWidgetItem *it, int i)
 {
   if(v_iew->a_ttWidget) {
     v_iew->a_ttRemoveBtn->setEnabled((it!=0));
@@ -1598,13 +1602,13 @@ void KNComposer::slotAttachmentSelected(Q3ListViewItem *it)
 }
 
 
-void KNComposer::slotAttachmentEdit(Q3ListViewItem *)
+void KNComposer::slotAttachmentEdit(QTreeWidgetItem *, int)
 {
   slotAttachmentProperties();
 }
 
 
-void KNComposer::slotAttachmentRemove(Q3ListViewItem *)
+void KNComposer::slotAttachmentRemove(QTreeWidgetItem *)
 {
   slotRemoveAttachment();
 }
@@ -1758,15 +1762,21 @@ QMenu * KNComposer::popupMenu( const QString& name )
 
 
 KNComposer::AttachmentView::AttachmentView( QWidget *parent )
- : K3ListView( parent )
+: QTreeWidget( parent )
 {
   setFrameStyle(QFrame::WinPanel | QFrame::Sunken);  // match the QMultiLineEdit style
-  addColumn(i18n("File"), 115);
-  addColumn(i18n("Type"), 91);
-  addColumn(i18n("Size"), 55);
-  addColumn(i18n("Description"), 110);
-  addColumn(i18n("Encoding"), 60);
-  header()->setClickEnabled(false);
+
+  setColumnCount(5);
+  QStringList attachments_view_columns;
+  attachments_view_columns << "File" << "Type" << "Size" << "Description" << "Encoding";
+  setHeaderLabels(attachments_view_columns);
+  setColumnWidth(0, 115);
+  setColumnWidth(1, 91);
+  setColumnWidth(2, 55);
+  setColumnWidth(3, 110);
+  setColumnWidth(4, 60);
+
+  header()->setClickable(false);
   setAllColumnsShowFocus(true);
 }
 
@@ -1784,15 +1794,14 @@ void KNComposer::AttachmentView::keyPressEvent(QKeyEvent *e)
   if( (e->key()==Qt::Key_Delete) && (currentItem()) )
     emit(delPressed(currentItem()));
   else
-    K3ListView::keyPressEvent(e);
+    QTreeWidget::keyPressEvent(e);
 }
 
 
 //=====================================================================================
 
-
-KNComposer::AttachmentViewItem::AttachmentViewItem(K3ListView *v, KNAttachment *a) :
-  K3ListViewItem(v), attachment(a)
+KNComposer::AttachmentViewItem::AttachmentViewItem(QTreeWidget *v, KNAttachment *a) :
+  QTreeWidgetItem(v), attachment(a)
 {
   setText(0, a->name());
   setText(1, a->mimeType());

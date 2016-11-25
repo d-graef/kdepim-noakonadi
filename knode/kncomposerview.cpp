@@ -19,7 +19,7 @@
 #include <QVBoxLayout>
 #include <QGroupBox>
 #include <QHBoxLayout>
-#include <Q3Header>
+#include <QHeaderView>
 #include <KComboBox>
 #include <KTemporaryFile>
 #include <QApplication>
@@ -127,7 +127,7 @@ KNComposer::ComposerView::~ComposerView()
     conf.writeEntry("Att_Splitter",sizes());   // save splitter pos
 
     QList<int> lst;                        // save header sizes
-    Q3Header *h=a_ttView->header();
+    QHeaderView *h=a_ttView->header();
     for (int i=0; i<5; i++)
       lst << h->sectionSize(i);
     conf.writeEntry("Att_Headers",lst);
@@ -205,21 +205,22 @@ void KNComposer::ComposerView::showAttachmentView()
 
     a_ttView=new AttachmentView(a_ttWidget);
     topL->addWidget(a_ttView, 0, 0, 3, 1);
+    a_ttView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     //connections
-    connect(a_ttView, SIGNAL(currentChanged(Q3ListViewItem*)),
-            parent(), SLOT(slotAttachmentSelected(Q3ListViewItem*)));
-    connect(a_ttView, SIGNAL(clicked ( Q3ListViewItem * )),
-            parent(), SLOT(slotAttachmentSelected(Q3ListViewItem*)));
+    connect(a_ttView, SIGNAL(itemChanged(QTreeWidgetItem*, int)),
+            parent(), SLOT(slotAttachmentSelected(QTreeWidgetItem*, int)));
+    connect(a_ttView, SIGNAL(itemClicked(QTreeWidgetItem*, int)),
+            parent(), SLOT(slotAttachmentSelected(QTreeWidgetItem*, int)));
+    connect(a_ttView, SIGNAL(customContextMenuRequested(const QPoint&)),
+            parent(), SLOT(slotAttachmentPopup(const QPoint&)));
+    connect(a_ttView, SIGNAL(delPressed(QTreeWidgetItem*)),
+            parent(), SLOT(slotAttachmentRemove(QTreeWidgetItem*)));
+    connect(a_ttView, SIGNAL(itemDoubleClicked(QTreeWidgetItem*, int)),
+            parent(), SLOT(slotAttachmentEdit(QTreeWidgetItem*, int)));
+    connect(a_ttView, SIGNAL(itemPressed(QTreeWidgetItem*, int)),
+            parent(), SLOT(slotAttachmentEdit(QTreeWidgetItem*, int)));
 
-    connect(a_ttView, SIGNAL(contextMenu(K3ListView*, Q3ListViewItem*, const QPoint&)),
-            parent(), SLOT(slotAttachmentPopup(K3ListView*, Q3ListViewItem*, const QPoint&)));
-    connect(a_ttView, SIGNAL(delPressed(Q3ListViewItem*)),
-            parent(), SLOT(slotAttachmentRemove(Q3ListViewItem*)));
-    connect(a_ttView, SIGNAL(doubleClicked(Q3ListViewItem*)),
-            parent(), SLOT(slotAttachmentEdit(Q3ListViewItem*)));
-    connect(a_ttView, SIGNAL(returnPressed(Q3ListViewItem*)),
-            parent(), SLOT(slotAttachmentEdit(Q3ListViewItem*)));
 
     //buttons
     a_ttAddBtn=new QPushButton(i18n("A&dd..."),a_ttWidget);
@@ -255,7 +256,7 @@ void KNComposer::ComposerView::showAttachmentView()
     if(lst.count()==5) {
       QList<int>::Iterator it = lst.begin();
 
-      Q3Header *h=a_ttView->header();
+      QHeaderView *h=a_ttView->header();
       for(int i=0; i<5; i++) {
         h->resizeSection(i,(*it));
         ++it;
