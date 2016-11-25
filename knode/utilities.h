@@ -20,8 +20,6 @@
 #include <QFile>
 
 #include <qglobal.h>
-#include <q3ptrvector.h>
-#include <q3ptrlist.h>
 
 class QWidget;
 class QString;

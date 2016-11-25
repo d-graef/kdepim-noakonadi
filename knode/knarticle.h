@@ -17,7 +17,6 @@
 
 #include <QFile>
 #include <QColor>
-#include <q3asciidict.h>
 #include <QList>
 
 #include <kmime/kmime_headers.h>
