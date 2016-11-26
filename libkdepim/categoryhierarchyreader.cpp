@@ -25,7 +25,7 @@
 
 #include <QComboBox>
 #include <QStringList>
-#include <Q3ListView>
+
 
 using namespace KPIM;
 

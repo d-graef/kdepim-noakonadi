@@ -37,6 +37,9 @@
 #include <QShortcut>
 #include <QTimer>
 
+#include <QKeyEvent>
+#include <QTextLayout>
+
 using namespace KPIMTextEdit;
 
 namespace KPIM {
