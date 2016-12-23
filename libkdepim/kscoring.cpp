@@ -649,24 +649,29 @@ KScoringRule::KScoringRule( const QString &n )
 KScoringRule::KScoringRule( const KScoringRule &r )
 {
   kDebug(5100) <<"copying rule" << r.getName();
+  int count = 0, i = 0;
   name = r.getName();
 //  expressions.setAutoDelete( true );
 //  actions.setAutoDelete( true );
   // copy expressions
   expressions.clear();
-  const ScoreExprList &rexpr = r.expressions;
+//  const ScoreExprList &rexpr = r.expressions;
+  count = expressions.count();
 
-  for ( QVector<KScoringExpression>::iterator it = expressions.begin(); it != expressions.end(); ++it ) {
-    KScoringExpression *t = new KScoringExpression( *it );
+  while ( i < count ) {
+    KScoringExpression *t = new KScoringExpression( expressions.at(i) );
     expressions.append( *t );
+    i++;
   }
   // copy actions
   actions.clear();
-  const ActionList &ract = r.actions;
+//  const ActionList &ract = r.actions;
+  count = actions.count();
 
-for ( QVector<ActionBase*>::iterator ait = actions.begin(); ait != actions.end(); ++ait ) {
-    ActionBase *t = *ait;
+  while ( i < count ) {
+    ActionBase *t = actions.at(i);
     actions.append( t->clone() );
+    i++;
   }
   // copy groups, servers, linkmode and expires
   groups = r.groups;
@@ -742,9 +747,12 @@ bool KScoringRule::matchGroup( const QString &group ) const
 
 void KScoringRule::applyAction( ScorableArticle &a ) const
 {
+  int count = 0, i = 0;
+  count = actions.count();
 
-  for ( QVector<ActionBase*>::const_iterator ait = actions.begin(); ait != actions.end(); ++ait ) {
-    (*ait)->apply( a );
+  while ( i < count ) {
+    actions.at(i)->apply( a );
+    i++;
   }
 }
 
@@ -752,16 +760,21 @@ void KScoringRule::applyRule( ScorableArticle &a ) const
 {
   bool oper_and = ( link == AND );
   bool res = true;
+  int count = 0, i = 0;
 
-  for ( QVector<KScoringExpression>::const_iterator it = expressions.begin(); it != expressions.end(); ++it ) {
-    Q_ASSERT( *it );
-    res = it->match( a );
+//  for ( QVector<KScoringExpression>::const_iterator it = expressions.begin(); it != expressions.end(); ++it ) {
+  while ( i < count ) {
+//    Q_ASSERT( *it );
+//    res = it->match( a );
+    Q_ASSERT( expressions.at( i ) );
+    res = expressions.at(i).match( a );
 
     if ( !res && oper_and ) {
       return;
     } else if ( res && !oper_and ) {
       break;
     }
+    i++;
   }
   if ( res ) {
     applyAction( a );
@@ -787,6 +800,7 @@ void KScoringRule::write( QTextStream &s ) const
 QString KScoringRule::toString() const
 {
   QString r;
+  int count = 0, i = 0;
   r += "<Rule name=\"" + toXml(name) + "\" linkmode=\"" + getLinkModeName();
   r += "\" expires=\"" + getExpireDateString() + "\">";
 
@@ -794,12 +808,19 @@ QString KScoringRule::toString() const
     r += "<Group name=\"" + toXml(*i) + "\" />";
   }
 
-  for ( QVector<KScoringExpression>::const_iterator eit = expressions.begin(); eit != expressions.end(); ++eit ) {
-      r += eit->toString();
+  count = expressions.count();
+
+  while ( i < count ) {
+     r += expressions.at(i).toString();
+     i++;
   }
 
-  for ( QVector<ActionBase*>::const_iterator ait = actions.begin(); ait != actions.end(); ++ait ) {
-       r += (*ait)->toString();
+  count = actions.count();
+  i = 0;
+
+  while ( i < count ) {
+     r += actions.at(i)->toString();
+     i++;
   }
   r += "</Rule>";
   return r;
