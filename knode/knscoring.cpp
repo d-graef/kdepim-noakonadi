@@ -23,6 +23,7 @@
 #include "utilities.h"
 #include "knglobals.h"
 
+
 //----------------------------------------------------------------------------
 NotifyCollection* KNScorableArticle::notifyC = 0;
 

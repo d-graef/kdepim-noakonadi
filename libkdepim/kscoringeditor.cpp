@@ -189,20 +189,27 @@ void ConditionEditWidget::clearWidget( QWidget *w )
 
 void ConditionEditWidget::slotEditRule( KScoringRule *rule )
 {
+  int count = 0, i = 0;
   KScoringRule::ScoreExprList l;
+
   if ( rule ) {
     l = rule->getExpressions();
   }
+
   if ( !rule || l.count() == 0 ) {
     slotClear();
   } else {
     setNumberOfShownWidgetsTo( l.count() );
-    KScoringExpression *e = l.first();
+    KScoringExpression se = l.at(0);
+    KScoringExpression *e = &se;
+    count = l.size();
+
     QList<QWidget*>::ConstIterator it = mWidgetList.constBegin();
-    while ( e && it != mWidgetList.constEnd() ) {
+    while ( ( i < count) && it != mWidgetList.constEnd() ) {
       SingleConditionWidget *scw = static_cast<SingleConditionWidget *>( *it );
+      se = l.at(i);
       scw->setCondition( e );
-      e = l.next();
+      i++;
       ++it;
     }
   }
@@ -379,7 +386,9 @@ QWidget *ActionEditWidget::createWidget( QWidget *parent )
 
 void ActionEditWidget::slotEditRule( KScoringRule *rule )
 {
+  int count = 0, i = 0;
   KScoringRule::ActionList l;
+
   if ( rule ) {
     l = rule->getActions();
   }
@@ -387,12 +396,16 @@ void ActionEditWidget::slotEditRule( KScoringRule *rule )
     slotClear();
   } else {
     setNumberOfShownWidgetsTo( l.count() );
-    ActionBase *act = l.first();
+    ActionBase *act = l.at(0);
+    count = l.size();
+
     QList<QWidget*>::ConstIterator it = mWidgetList.constBegin();
-    while ( act && it != mWidgetList.constEnd() ) {
+
+    while ( (i < count) && it != mWidgetList.constEnd() ) {
       SingleActionWidget *saw = static_cast<SingleActionWidget*>( *it );
+      act = l.at(i);
       saw->setAction( act );
-      act = l.next();
+      i++;
       ++it;
     }
   }
@@ -766,6 +779,8 @@ void RuleListWidget::updateButton()
 
 void RuleListWidget::updateRuleList()
 {
+  int count = 0, i = 0;
+
   emit leavingRule();
   kDebug(5100) <<"RuleListWidget::updateRuleList()";
   QString curr = ruleList->currentText();
@@ -775,10 +790,15 @@ void RuleListWidget::updateRuleList()
     ruleList->insertStringList( l );
   } else {
     KScoringManager::ScoringRuleList l = manager->getAllRules();
-    for ( KScoringRule *rule = l.first(); rule; rule = l.next() ) {
+    count = l.size();
+    KScoringRule *rule = l.at(0);
+
+    while (i < count) {
       if ( rule->matchGroup( group ) ) {
         ruleList->insertItem( rule->getName() );
       }
+      i++;
+      rule = l.at(i);
     }
   }
   int index = setCurrentItem( ruleList, curr );

@@ -39,9 +39,7 @@
 #include <QLabel>
 #include <QTextStream>
 #include <QVBoxLayout>
-#include <Q3PtrList>
 
-#include <iostream>
 
 using namespace KPIM;
 
@@ -369,7 +367,7 @@ ActionMarkAsRead *ActionMarkAsRead::clone() const
 //----------------------------------------------------------------------------
 NotifyCollection::NotifyCollection()
 {
-  notifyList.setAutoDelete( true );
+//  notifyList.setAutoDelete( true );
 }
 
 NotifyCollection::~NotifyCollection()
@@ -378,15 +376,19 @@ NotifyCollection::~NotifyCollection()
 
 void NotifyCollection::addNote( const ScorableArticle &a, const QString &note )
 {
-  article_list *l = notifyList.find( note );
-  if ( !l ) {
-    notifyList.insert( note, new article_list );
-    l = notifyList.find( note );
+
+  QHash<QString, article_list>::iterator it = notifyList.find( note );
+  article_list l = *it;
+  article_list *pL = &l;
+
+  if ( !pL ) {
+    notifyList.insert( note, *(new article_list) );
+    it = notifyList.find( note );
   }
   article_info i;
   i.from = a.from();
   i.subject = a.subject();
-  l->append(i);
+  l.append(i);
 }
 
 QString NotifyCollection::collection() const
@@ -394,13 +396,14 @@ QString NotifyCollection::collection() const
   QString notifyCollection = i18n( "<h1>List of collected notes</h1>" );
   notifyCollection += "<p><ul>";
   // first look thru the notes and create one string
-  Q3DictIterator<article_list> it(notifyList);
-  for ( ; it.current(); ++it ) {
-    const QString &note = it.currentKey();
+  QHash<QString, article_list>::const_iterator it = notifyList.begin();
+
+  for ( ; it != notifyList.end(); ++it ) {
+    const QString &note = it.key();
     notifyCollection += "<li>" + note + "<ul>";
-    article_list *alist = it.current();
+    article_list alist = *it;
     article_list::Iterator ait;
-    for ( ait = alist->begin(); ait != alist->end(); ++ait ) {
+    for ( ait = alist.begin(); ait != alist.end(); ++ait ) {
       notifyCollection += "<li><b>From: </b>" + (*ait).from + "<br>";
       notifyCollection += "<b>Subject: </b>" + (*ait).subject;
     }
@@ -459,6 +462,11 @@ KScoringExpression::KScoringExpression( const QString &h, const QString &t,
 
   kDebug(5100) <<"new expr:" << header << t
                << expr_str << neg;
+}
+
+
+KScoringExpression::KScoringExpression()
+{
 }
 
 // static
@@ -634,29 +642,29 @@ int  KScoringExpression::getType() const
 KScoringRule::KScoringRule( const QString &n )
   : name( n ), link( AND )
 {
-  expressions.setAutoDelete( true );
-  actions.setAutoDelete( true );
+//  expressions.setAutoDelete( true );
+//  actions.setAutoDelete( true );
 }
 
 KScoringRule::KScoringRule( const KScoringRule &r )
 {
   kDebug(5100) <<"copying rule" << r.getName();
   name = r.getName();
-  expressions.setAutoDelete( true );
-  actions.setAutoDelete( true );
+//  expressions.setAutoDelete( true );
+//  actions.setAutoDelete( true );
   // copy expressions
   expressions.clear();
   const ScoreExprList &rexpr = r.expressions;
-  Q3PtrListIterator<KScoringExpression> it( rexpr );
-  for ( ; it.current(); ++it ) {
-    KScoringExpression *t = new KScoringExpression( **it );
-    expressions.append( t );
+
+  for ( QVector<KScoringExpression>::iterator it = expressions.begin(); it != expressions.end(); ++it ) {
+    KScoringExpression *t = new KScoringExpression( *it );
+    expressions.append( *t );
   }
   // copy actions
   actions.clear();
   const ActionList &ract = r.actions;
-  Q3PtrListIterator<ActionBase> ait( ract );
-  for ( ; ait.current(); ++ait ) {
+
+for ( QVector<ActionBase*>::iterator ait = actions.begin(); ait != actions.end(); ++ait ) {
     ActionBase *t = *ait;
     actions.append( t->clone() );
   }
@@ -687,7 +695,7 @@ void KScoringRule::cleanActions()
 void KScoringRule::addExpression( KScoringExpression *expr )
 {
   kDebug(5100) <<"KScoringRule::addExpression";
-  expressions.append(expr);
+  expressions.append(*expr);
 }
 
 void KScoringRule::addAction( int type, const QString &val )
@@ -734,9 +742,9 @@ bool KScoringRule::matchGroup( const QString &group ) const
 
 void KScoringRule::applyAction( ScorableArticle &a ) const
 {
-  Q3PtrListIterator<ActionBase> it( actions );
-  for ( ; it.current(); ++it ) {
-    it.current()->apply( a );
+
+  for ( QVector<ActionBase*>::const_iterator ait = actions.begin(); ait != actions.end(); ++ait ) {
+    (*ait)->apply( a );
   }
 }
 
@@ -744,11 +752,11 @@ void KScoringRule::applyRule( ScorableArticle &a ) const
 {
   bool oper_and = ( link == AND );
   bool res = true;
-  Q3PtrListIterator<KScoringExpression> it( expressions );
 
-  for ( ; it.current(); ++it ) {
-    Q_ASSERT( it.current() );
-    res = it.current()->match( a );
+  for ( QVector<KScoringExpression>::const_iterator it = expressions.begin(); it != expressions.end(); ++it ) {
+    Q_ASSERT( *it );
+    res = it->match( a );
+
     if ( !res && oper_and ) {
       return;
     } else if ( res && !oper_and ) {
@@ -786,14 +794,12 @@ QString KScoringRule::toString() const
     r += "<Group name=\"" + toXml(*i) + "\" />";
   }
 
-  Q3PtrListIterator<KScoringExpression> eit(expressions);
-  for ( ; eit.current(); ++eit ) {
-    r += eit.current()->toString();
+  for ( QVector<KScoringExpression>::const_iterator eit = expressions.begin(); eit != expressions.end(); ++eit ) {
+      r += eit->toString();
   }
 
-  Q3PtrListIterator<ActionBase> ait(actions);
-  for ( ; ait.current(); ++ait ) {
-    r += ait.current()->toString();
+  for ( QVector<ActionBase*>::const_iterator ait = actions.begin(); ait != actions.end(); ++ait ) {
+       r += (*ait)->toString();
   }
   r += "</Rule>";
   return r;
@@ -834,7 +840,6 @@ bool KScoringRule::isExpired() const
 KScoringManager::KScoringManager( const QString &appName )
   :  cacheValid( false )
 {
-  allRules.setAutoDelete( true );
   // determine filename of the scorefile
   if ( appName.isEmpty() ) {
     mFilename = KGlobal::dirs()->saveLocation( "appdata" ) + "/scorefile";
@@ -899,22 +904,31 @@ QDomDocument KScoringManager::createXMLfromInternal()
 
 QString KScoringManager::toString() const
 {
+  int count = 0, i = 0;
   QString s;
   s += "<Scorefile>\n";
-  Q3PtrListIterator<KScoringRule> it( allRules );
-  for ( ; it.current(); ++it ) {
-    s += it.current()->toString();
+  QVectorIterator<KScoringRule*> it(allRules);
+  count = allRules.count();
+
+   while( i < count ) {
+    s += allRules.at(i)->toString();
+    i++;
   }
   return s;
 }
 
 void KScoringManager::expireRules()
 {
-  for ( KScoringRule *cR = allRules.first(); cR; cR=allRules.next() ) {
-    if ( cR->isExpired() ) {
-      kDebug(5100) <<"Rule" << cR->getName() <<" is expired, deleting it";
-      allRules.remove();
+    int count = 0, i = 0;
+    QVectorIterator<KScoringRule*> it(allRules);
+    count = allRules.count();
+
+    while( i < count ) {
+      if ( allRules.at(i)->isExpired() ) {
+      kDebug(5100) <<"Rule" << allRules.at(i)->getName() <<" is expired, deleting it";
+      allRules.remove( i );
     }
+    i++;
   }
 }
 
@@ -990,7 +1004,7 @@ KScoringRule *KScoringManager::addRule( const ScorableArticle &a,
 
 KScoringRule *KScoringManager::addRule( KScoringRule *expr )
 {
-  int i = allRules.findRef( expr );
+  int i = allRules.indexOf( expr );
   if ( i == -1 ) {
     // only add a rule we don't know
     addRuleInternal( expr );
@@ -1009,7 +1023,7 @@ KScoringRule *KScoringManager::addRule()
 
 void KScoringManager::addRuleInternal( KScoringRule *e )
 {
-  allRules.append( e ) ;
+  allRules.append( e );
   setCacheValid( false );
   emit changedRules();
   kDebug(5100) <<"KScoringManager::addRuleInternal" << e->getName();
@@ -1018,7 +1032,7 @@ void KScoringManager::addRuleInternal( KScoringRule *e )
 void KScoringManager::cancelNewRule( KScoringRule *r )
 {
   // if e was'nt previously added to the list of rules, we delete it
-  int i = allRules.findRef( r );
+  int i = allRules.indexOf( r );
   if ( i == -1 ) {
     kDebug(5100) <<"deleting rule" << r->getName();
     deleteRule( r );
@@ -1029,14 +1043,17 @@ void KScoringManager::cancelNewRule( KScoringRule *r )
 
 void KScoringManager::setRuleName( KScoringRule *r, const QString &s )
 {
+  int count = 0, i = 0;
   bool cont = true;
   QString text = s;
   QString oldName = r->getName();
   while ( cont ) {
     cont = false;
-    Q3PtrListIterator<KScoringRule> it( allRules );
-    for ( ; it.current(); ++it ) {
-      if ( it.current() != r && it.current()->getName() == text ) {
+    QVectorIterator<KScoringRule*> it(allRules);
+    count = allRules.count(); 
+
+    while ( i < count ) {
+      if ( allRules.at(i) != r && allRules.at(i)->getName() == text ) {
         kDebug(5100) <<"rule name" << text <<" is not unique";
         text = KInputDialog::getText(
           i18n( "Choose Another Rule Name" ),
@@ -1045,6 +1062,8 @@ void KScoringManager::setRuleName( KScoringRule *r, const QString &s )
         cont = true;
         break;
       }
+      it.next();
+      i++;
     }
   }
   if ( text != oldName ) {
@@ -1055,9 +1074,10 @@ void KScoringManager::setRuleName( KScoringRule *r, const QString &s )
 
 void KScoringManager::deleteRule( KScoringRule *r )
 {
-  int i = allRules.findRef( r );
+  int i = allRules.indexOf( r );
+
   if ( i != -1 ) {
-    allRules.remove();
+    allRules.remove(i);
     emit changedRules();
   }
 }
@@ -1072,29 +1092,32 @@ void KScoringManager::editRule( KScoringRule *e, QWidget *w )
 
 void KScoringManager::moveRuleAbove( KScoringRule *above, KScoringRule *below )
 {
-  int aindex = allRules.findRef( above );
-  int bindex = allRules.findRef( below );
+  int aindex = allRules.indexOf( above );
+  int bindex = allRules.indexOf( below );
+
+
   if ( aindex <= 0 || bindex < 0 ) {
     return;
   }
   if ( aindex < bindex ) {
     --bindex;
   }
-  allRules.take( aindex );
+  allRules.remove( aindex );
   allRules.insert( bindex, above );
 }
 
 void KScoringManager::moveRuleBelow( KScoringRule *below, KScoringRule *above )
 {
-  int bindex = allRules.findRef( below );
-  int aindex = allRules.findRef( above );
+  int bindex = allRules.indexOf( below );
+  int aindex = allRules.indexOf( above );
+
   if ( bindex < 0 || bindex >= (int)allRules.count() - 1 || aindex < 0 ) {
     return;
   }
   if ( bindex < aindex ) {
     --aindex;
   }
-  allRules.take( bindex );
+  allRules.remove( bindex );
   allRules.insert( aindex + 1, below );
 }
 
@@ -1126,9 +1149,10 @@ void KScoringManager::applyRules( ScorableArticle &article, const QString &group
 
 void KScoringManager::applyRules( ScorableArticle &a )
 {
-  Q3PtrListIterator<KScoringRule> it( isCacheValid() ? ruleList : allRules );
-  for ( ; it.current(); ++it ) {
-    it.current()->applyRule( a );
+  QVectorIterator<KScoringRule*> it( isCacheValid() ? ruleList : allRules );
+
+  while ( it.hasNext() ) {
+      it.next()->applyRule( a );
   }
 }
 
@@ -1136,11 +1160,14 @@ void KScoringManager::initCache( const QString &g )
 {
   group = g;
   ruleList.clear();
-  Q3PtrListIterator<KScoringRule> it(allRules);
-  for ( ; it.current(); ++it ) {
-    if ( it.current()->matchGroup( group ) ) {
-      ruleList.append( it.current() );
+   QVectorIterator<KScoringRule*> it(allRules);
+
+     while ( it.hasNext() ) {
+
+      if ( it.peekNext()->matchGroup( group ) ) {
+       ruleList.append( it.peekNext() );
     }
+    it.next();
   }
   kDebug(5100) <<"created cache for group" << group
                << "with" << ruleList.count() << "rules";
@@ -1162,19 +1189,22 @@ bool KScoringManager::hasRulesForCurrentGroup()
 QStringList KScoringManager::getRuleNames()
 {
   QStringList l;
-  Q3PtrListIterator<KScoringRule> it( allRules );
-  for ( ; it.current(); ++it ) {
-    l << it.current()->getName();
+  QVectorIterator<KScoringRule*> it(allRules);
+
+     while ( it.hasNext() )   {
+      l << it.next()->getName();
   }
   return l;
 }
 
 KScoringRule *KScoringManager::findRule( const QString &ruleName )
 {
-  Q3PtrListIterator<KScoringRule> it( allRules );
-  for ( ; it.current(); ++it ) {
-    if ( it.current()->getName() == ruleName ) {
-      return it;
+  QVectorIterator<KScoringRule*> it(allRules);
+
+     while ( it.hasNext() )  {
+    if ( it.peekNext()->getName() == ruleName ) {
+      return it.peekNext();
+
     }
   }
   return 0;
@@ -1198,12 +1228,14 @@ QString KScoringManager::findUniqueName() const
     ret = i18n( "rule %1", nr );
 
     duplicated = false;
-    Q3PtrListIterator<KScoringRule> it( allRules );
-    for ( ; it.current(); ++it ) {
-      if ( it.current()->getName() == ret ) {
+    QVectorIterator<KScoringRule*> it( allRules );
+
+     while ( it.hasNext() )   {
+      if ( it.peekNext()->getName() == ret ) {
         duplicated = true;
         break;
       }
+      it.next();
     }
 
     if ( !duplicated ) {
@@ -1262,18 +1294,22 @@ RuleStack::RuleStack()
 RuleStack::~RuleStack()
 {}
 
-void RuleStack::push( Q3PtrList<KScoringRule> &l )
+
+void RuleStack::push( QVector<KScoringRule*> &l )
 {
   kDebug(5100) <<"RuleStack::push pushing list with" << l.count() <<" rules";
   KScoringManager::ScoringRuleList *l1 = new KScoringManager::ScoringRuleList;
-  for ( KScoringRule *r=l.first(); r != 0; r=l.next() ) {
-    l1->append( new KScoringRule( *r ) );
+
+  QVectorIterator<KScoringRule*> it(l);
+
+     while ( it.hasNext() ) {
+      l1->append( new KScoringRule(* it.next() ) );
   }
-  stack.push( l1 );
+  stack.push( *l1 );
   kDebug(5100) <<"now there are" << stack.count() <<" lists on the stack";
 }
 
-void RuleStack::pop( Q3PtrList<KScoringRule> &l )
+void RuleStack::pop( QVector<KScoringRule*> &l )
 {
   top( l );
   drop();
@@ -1281,17 +1317,20 @@ void RuleStack::pop( Q3PtrList<KScoringRule> &l )
   kDebug(5100) <<"now there are" << stack.count() <<" lists on the stack";
 }
 
-void RuleStack::top( Q3PtrList<KScoringRule> &l )
+
+void RuleStack::top( QVector<KScoringRule*> &l )
 {
   l.clear();
-  KScoringManager::ScoringRuleList *l1 = stack.top();
+  KScoringManager::ScoringRuleList *l1;
+  KScoringManager::ScoringRuleList ScoringRL = stack.top();
+  l1 = &ScoringRL;
   l = *l1;
 }
 
 void RuleStack::drop()
 {
   kDebug(5100) <<"drop: now there are" << stack.count() <<" lists on the stack";
-  stack.remove();
+  stack.pop();
 }
 
 #include "kscoring.moc"

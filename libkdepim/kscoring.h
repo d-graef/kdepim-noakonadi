@@ -29,9 +29,10 @@
 #include <QString>
 #include <QStringList>
 #include <QTextStream>
-#include <Q3Dict>
-#include <Q3PtrList>
-#include <Q3PtrStack>
+#include <QMultiHash>
+#include <QVector>
+#include <QStack>
+
 
 #include <unistd.h>
 
@@ -177,7 +178,7 @@ class KDEPIM_EXPORT NotifyCollection
       QString subject;
     };
     typedef QList<article_info> article_list;
-    typedef Q3Dict<article_list> note_list;
+    typedef QMultiHash<QString, article_list> note_list;
     note_list notifyList;
 };
 
@@ -196,6 +197,7 @@ class KDEPIM_EXPORT KScoringExpression
     };
 
     KScoringExpression( const QString &, const QString &, const QString &, const QString & );
+    KScoringExpression();
     ~KScoringExpression();
 
     bool match( ScorableArticle &a ) const ;
@@ -232,8 +234,9 @@ class KDEPIM_EXPORT KScoringRule
     KScoringRule( const KScoringRule &r );
     ~KScoringRule();
 
-    typedef Q3PtrList<KScoringExpression> ScoreExprList;
-    typedef Q3PtrList<ActionBase> ActionList;
+    typedef QVector<KScoringExpression> ScoreExprList;
+    typedef QVector<ActionBase*> ActionList;
+
     typedef QStringList GroupList;
     enum LinkMode {
       AND,
@@ -297,17 +300,17 @@ class KDEPIM_EXPORT RuleStack
     RuleStack();
     ~RuleStack();
     //! puts the list on the stack, doesn't change the list
-    void push( Q3PtrList<KScoringRule>& );
+    void push( QVector<KScoringRule*>& );
     //! clears the argument list and copy the content of the TOS into it
     //! after that the TOS gets dropped
-    void pop( Q3PtrList<KScoringRule>& );
+    void pop( QVector<KScoringRule*>& );
     //! like pop but without dropping the TOS
-    void top( Q3PtrList<KScoringRule>& );
+    void top( QVector<KScoringRule*>& );
     //! drops the TOS
     void drop();
 
   private:
-    Q3PtrStack< Q3PtrList<KScoringRule> > stack;
+    QStack< QVector<KScoringRule*> > stack;
 };
 
 //----------------------------------------------------------------------------
@@ -317,7 +320,7 @@ class KDEPIM_EXPORT KScoringManager : public QObject
   Q_OBJECT
   public:
     // this is the container for all rules
-    typedef Q3PtrList<KScoringRule> ScoringRuleList;
+    typedef QVector<KScoringRule*> ScoringRuleList;
 
     KScoringManager( const QString &appName = QString() );
     virtual ~KScoringManager();
