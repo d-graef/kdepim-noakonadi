@@ -49,12 +49,12 @@
 
 using namespace KPIM;
 
-static int setCurrentItem( K3ListBox *box, const QString &s )
+static int setCurrentItem( QListWidget *box, const QString &s )
 {
   int cnt = box->count();
   for ( int i=0; i<cnt; ++i ) {
-    if ( box->text( i ) == s ) {
-      box->setCurrentItem( i );
+    if ( box->item(i)->text() == s ) {
+      box->setCurrentItem( box->item(i) );
       return i;
     }
   }
@@ -673,15 +673,16 @@ RuleListWidget::RuleListWidget( KScoringManager *m, bool standalone, QWidget *p,
   topL->setMargin( standalone ? 0 : 5 );
   topL->setSpacing( KDialog::spacingHint() );
 
-  ruleList = new K3ListBox( this );
+  ruleList = new QListWidget( this );
+
   if ( standalone ) {
-    connect( ruleList, SIGNAL(doubleClicked(Q3ListBoxItem*)),
-             this, SLOT(slotEditRule(Q3ListBoxItem*)) );
-    connect( ruleList, SIGNAL(returnPressed(Q3ListBoxItem*)),
-             this, SLOT(slotEditRule(Q3ListBoxItem*)) );
+    connect( ruleList, SIGNAL(itemDoubleClicked(QListWidgetItem*)),
+             this, SLOT(slotEditRule(QListWidgetItem*)) );
+    connect( ruleList, SIGNAL(itemPressed(QListWidgetItem*)),
+             this, SLOT(slotEditRule(QListWidgetItem*)) );
   }
-  connect( ruleList, SIGNAL(currentChanged(Q3ListBoxItem*)),
-           this, SLOT(slotRuleSelected(Q3ListBoxItem*)) );
+  connect( ruleList, SIGNAL(itemActivated(QListWidgetItem*)),
+         this, SLOT(slotRuleSelected(QListWidgetItem*)) );
   topL->addWidget( ruleList );
 
   QHBoxLayout *btnL = new QHBoxLayout();
@@ -740,19 +741,19 @@ RuleListWidget::RuleListWidget( KScoringManager *m, bool standalone, QWidget *p,
   filterBox->addItem( i18n( "<placeholder>all groups</placeholder>" ) );
   filterBox->addItems( l );
   filterBox->setSizePolicy( QSizePolicy( QSizePolicy::Expanding, QSizePolicy::Fixed ) );
+
   connect( filterBox, SIGNAL(activated(const QString&)),
            this, SLOT(slotGroupFilter(const QString&)) );
-  slotGroupFilter( i18n( "<placeholder>all groups</placeholder>" ) );
+    slotGroupFilter( i18n( "<placeholder>all groups</placeholder>" ) );
+
   QLabel *lab = new QLabel( i18n( "Sho&w only rules for group:" ), this );
   lab->setBuddy( filterBox );
-
   filterL->addWidget( lab );
   filterL->addWidget( filterBox );
 
   connect( manager, SIGNAL(changedRules()), this, SLOT(updateRuleList()) );
   connect( manager, SIGNAL(changedRuleName(const QString&,const QString&)),
            this, SLOT(slotRuleNameChanged(const QString&,const QString&)) );
-
   updateRuleList();
   updateButton();
 }
@@ -770,10 +771,10 @@ void RuleListWidget::updateButton()
   delRule->setEnabled( state );
   copyRule->setEnabled( state );
 
-  Q3ListBoxItem *item = ruleList->item( ruleList->currentItem() );
+  QListWidgetItem *item = ruleList->item( ruleList->currentRow() );
   if ( item ) {
-    mRuleUp->setEnabled( item->prev() != 0 );
-    mRuleDown->setEnabled( item->next() != 0 );
+    mRuleUp->setEnabled( (ruleList->currentRow() - 1) != 0 );
+    mRuleDown->setEnabled( (ruleList->currentRow() + 1) != 0 );
   }
 }
 
@@ -782,12 +783,18 @@ void RuleListWidget::updateRuleList()
   int count = 0, i = 0;
 
   emit leavingRule();
+
   kDebug(5100) <<"RuleListWidget::updateRuleList()";
-  QString curr = ruleList->currentText();
+  QListWidgetItem *cItem = ruleList->currentItem();
+  QString curr;
+  if (cItem) {
+    curr = cItem->text();
+  }
   ruleList->clear();
+
   if ( group == i18n( "<placeholder>all groups</placeholder>" ) ) {
     QStringList l = manager->getRuleNames();
-    ruleList->insertStringList( l );
+    ruleList->insertItems( ruleList->currentRow(), l );
   } else {
     KScoringManager::ScoringRuleList l = manager->getAllRules();
     count = l.size();
@@ -795,7 +802,7 @@ void RuleListWidget::updateRuleList()
 
     while (i < count) {
       if ( rule->matchGroup( group ) ) {
-        ruleList->insertItem( rule->getName() );
+        ruleList->insertItem( ruleList->currentRow() , rule->getName() );
       }
       i++;
       rule = l.at(i);
@@ -804,7 +811,10 @@ void RuleListWidget::updateRuleList()
   int index = setCurrentItem( ruleList, curr );
   if ( index < 0 ) {
     ruleList->setCurrentItem( 0 );
-    slotRuleSelected( ruleList->currentText() );
+    cItem = ruleList->currentItem();
+    if (cItem) {
+      slotRuleSelected( cItem->text() );
+    }
   } else {
     slotRuleSelected( curr );
   }
@@ -820,11 +830,11 @@ void RuleListWidget::updateRuleList( const KScoringRule *rule )
 
 void RuleListWidget::slotRuleNameChanged( const QString &oldName, const QString &newName )
 {
-  int ind = ruleList->currentItem();
+  int ind = ruleList->currentRow();
   for ( uint i=0; i<ruleList->count(); ++i ) {
-    if ( ruleList->text(i) == oldName ) {
-      ruleList->changeItem( newName, i );
-      ruleList->setCurrentItem( ind );
+    if ( ruleList->item(i)->text() == oldName ) {
+      ruleList->item(i)->setText(newName);
+      ruleList->setCurrentRow( ind );
       return;
     }
   }
@@ -837,14 +847,21 @@ void RuleListWidget::slotEditRule( const QString &s )
 
 void RuleListWidget::slotEditRule()
 {
+  QListWidgetItem *item = ruleList->currentItem();
+  QString str;
+
+  if (item) {
+    str = item->text();
+  }
+
   if ( ruleList->currentItem() >= 0 ) {
-    emit ruleEdited( ruleList->currentText() );
+    emit ruleEdited( str );
   } else if ( ruleList->count() == 0 ) {
     emit ruleEdited( QString() );
   }
 }
 
-void RuleListWidget::slotEditRule( Q3ListBoxItem *item )
+void RuleListWidget::slotEditRule( QListWidgetItem *item )
 {
   slotEditRule( item->text() );
 }
@@ -859,14 +876,21 @@ void RuleListWidget::slotRuleSelected( const QString &ruleName )
 {
   emit leavingRule();
   kDebug(5100) <<"RuleListWidget::slotRuleSelected(" << ruleName <<")";
-  if ( ruleName != ruleList->currentText() ) {
+  QListWidgetItem *item = ruleList->currentItem();
+  QString strItem;
+
+  if (item) {
+    strItem = item->text();
+  }
+
+  if ( ruleName != strItem ) {
     setCurrentItem( ruleList, ruleName );
   }
   updateButton();
   emit ruleSelected( ruleName );
 }
 
-void RuleListWidget::slotRuleSelected( Q3ListBoxItem *item )
+void RuleListWidget::slotRuleSelected( QListWidgetItem *item )
 {
   if ( !item ) {
     return;
@@ -881,7 +905,7 @@ void RuleListWidget::slotRuleSelected( int index )
   if ( idx >= ruleList->count() ) {
     return;
   }
-  QString ruleName = ruleList->text( index );
+  QString ruleName = ruleList->item(index)->text();
   slotRuleSelected( ruleName );
 }
 
@@ -898,7 +922,15 @@ void RuleListWidget::slotNewRule()
 
 void RuleListWidget::slotDelRule()
 {
-  KScoringRule *rule = manager->findRule( ruleList->currentText() );
+  QListWidgetItem *item = ruleList->currentItem();
+  QString str;
+
+  if (item) {
+    str = item->text();
+  }
+
+  KScoringRule *rule = manager->findRule( str );
+
   if ( rule ) {
     manager->deleteRule( rule );
   }
@@ -912,8 +944,14 @@ void RuleListWidget::slotDelRule()
 void RuleListWidget::slotCopyRule()
 {
   emit leavingRule();
-  QString ruleName = ruleList->currentText();
+  QListWidgetItem *item = ruleList->currentItem();
+  QString ruleName;
+
+  if (item) {
+    ruleName = item->text();
+  }
   KScoringRule *rule = manager->findRule( ruleName );
+
   if ( rule ) {
     KScoringRule *nrule = manager->copyRule( rule );
     updateRuleList( nrule );
@@ -925,10 +963,11 @@ void RuleListWidget::slotCopyRule()
 void RuleListWidget::slotRuleUp()
 {
   KScoringRule *rule = 0, *below = 0;
-  Q3ListBoxItem *item = ruleList->item( ruleList->currentItem() );
+  QListWidgetItem *item = ruleList->item( ruleList->currentRow() );
   if ( item ) {
     rule = manager->findRule( item->text() );
-    item = item->prev();
+    item = ruleList->item(ruleList->currentRow() - 1);
+
     if ( item ) {
       below = manager->findRule( item->text() );
     }
@@ -943,10 +982,11 @@ void RuleListWidget::slotRuleUp()
 void RuleListWidget::slotRuleDown()
 {
   KScoringRule *rule = 0, *above = 0;
-  Q3ListBoxItem *item = ruleList->item( ruleList->currentItem() );
+  QListWidgetItem *item = ruleList->item( ruleList->currentRow() );
   if ( item ) {
     rule = manager->findRule( item->text() );
-    item = item->next();
+    item = ruleList->item( ruleList->currentRow() + 1);
+
     if ( item ) {
       above = manager->findRule( item->text() );
     }
@@ -956,6 +996,17 @@ void RuleListWidget::slotRuleDown()
   }
   updateRuleList();
   updateButton();
+}
+
+QString RuleListWidget::currentRule()
+{
+  QListWidgetItem *item = ruleList->currentItem();
+  QString str;
+
+  if (item) {
+    str = item->text();
+  }
+  return str;
 }
 
 //============================================================================
@@ -1044,6 +1095,7 @@ void KScoringEditor::slotApply()
 {
   QString ruleName = ruleLister->currentRule();
   KScoringRule *rule = manager->findRule( ruleName );
+
   if ( rule ) {
     ruleEditor->updateRule( rule );
     ruleLister->updateRuleList( rule );

@@ -40,7 +40,6 @@
 #include <QTextStream>
 #include <QVBoxLayout>
 
-
 using namespace KPIM;
 
 //----------------------------------------------------------------------------
@@ -1222,11 +1221,11 @@ KScoringRule *KScoringManager::findRule( const QString &ruleName )
 {
   QVectorIterator<KScoringRule*> it(allRules);
 
-     while ( it.hasNext() )  {
+    while ( it.hasNext() )  {
     if ( it.peekNext()->getName() == ruleName ) {
       return it.peekNext();
-
     }
+   it.next();
   }
   return 0;
 }

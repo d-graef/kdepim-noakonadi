@@ -23,8 +23,7 @@
 #include "kwidgetlister.h"
 
 #include <KDialog>
-#include <K3ListBox>
-
+#include <QListWidget>
 #include <QMap>
 #include <QLabel>
 #include <QFrame>
@@ -35,7 +34,6 @@ class KColorCombo;
 class KLineEdit;
 class KIntSpinBox;
 class QLabel;
-class Q3ListBoxItem;
 class QPushButton;
 class QCheckBox;
 class QRadioButton;
@@ -210,7 +208,7 @@ class KDEPIM_EXPORT RuleListWidget : public QWidget
   public:
     explicit RuleListWidget( KScoringManager *m, bool=false, QWidget *p=0, const char *n=0 );
     ~RuleListWidget();
-    QString currentRule() const { return ruleList->currentText(); }
+    QString currentRule();
 
   protected:
     void updateButton();
@@ -222,7 +220,7 @@ class KDEPIM_EXPORT RuleListWidget : public QWidget
 
   public Q_SLOTS:
     void slotRuleSelected( const QString & );
-    void slotRuleSelected( Q3ListBoxItem * );
+    void slotRuleSelected( QListWidgetItem * );
     void slotRuleSelected( int );
     void updateRuleList();
     void updateRuleList( const KScoringRule * );
@@ -230,7 +228,7 @@ class KDEPIM_EXPORT RuleListWidget : public QWidget
 
   protected Q_SLOTS:
     void slotGroupFilter( const QString & );
-    void slotEditRule( Q3ListBoxItem * );
+    void slotEditRule( QListWidgetItem * );
     void slotEditRule( const QString & );
     void slotEditRule();
     void slotDelRule();
@@ -241,7 +239,7 @@ class KDEPIM_EXPORT RuleListWidget : public QWidget
 
   private:
     /** the list of rules */
-    K3ListBox *ruleList;
+    QListWidget *ruleList;
     /** the current group */
     QString group;
     /** marks if we're alone or together with the edit widget */
