@@ -22,7 +22,7 @@ set(kdepim_LIB_SRCS
    kcheckcombobox.cpp
    ktimeedit.cpp
 #   reminderclient.cpp
-   kprefsdialog.cpp
+#   kprefsdialog.cpp
    kpimprefs.cpp
    categoryselectdialog.cpp
    categoryeditdialog.cpp
@@ -61,10 +61,10 @@ set(kdepim_LIB_SRCS
    ksubscription.cpp
    kwidgetlister.cpp
    recentaddresses.cpp
-   designerfields.cpp
-   kcmdesignerfields.cpp
+#   designerfields.cpp
+#   kcmdesignerfields.cpp
    embeddedurlpage.cpp
-   kincidencechooser.cpp
+#   kincidencechooser.cpp
    csshelper.cpp
    distributionlist.cpp
    sendsmsdialog.cpp
@@ -131,18 +131,18 @@ install(TARGETS kdepim ${INSTALL_TARGETS_DEFAULT_ARGS})
 
 ########### next target ###############
 
-set(kdepimwidgets_PART_SRCS)
-kde4_add_widget_files(kdepimwidgets_PART_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/kdepim.widgets)
+# set(kdepimwidgets_PART_SRCS)
+# kde4_add_widget_files(kdepimwidgets_PART_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/kdepim.widgets)
 
-kde4_add_plugin(kdepimwidgets ${kdepimwidgets_PART_SRCS})
+# kde4_add_plugin(kdepimwidgets ${kdepimwidgets_PART_SRCS})
 
 
 
-target_link_libraries(kdepimwidgets  ${KDE4_KIO_LIBS} kdepim)
+# target_link_libraries(kdepimwidgets  ${KDE4_KIO_LIBS} kdepim)
 
-install(TARGETS kdepimwidgets  DESTINATION ${PLUGIN_INSTALL_DIR}/plugins/designer)
+# install(TARGETS kdepimwidgets  DESTINATION ${PLUGIN_INSTALL_DIR}/plugins/designer)
 
 
 ########### install files ###############
 
-install(FILES interfaces/org.kde.addressbook.service.xml interfaces/org.kde.mailtransport.service.xml DESTINATION ${DBUS_INTERFACES_INSTALL_DIR})
+install(FILES interfaces/org.kde.addressbook.service.xml interfaces/org.kde.mailtransport.service.xml DESTINATION   ${DBUS_INTERFACES_INSTALL_DIR})
