@@ -31,8 +31,8 @@ set(kdepim_LIB_SRCS
    addressesdialog.cpp
    addresseeview.cpp
    maillistdrag.cpp
-   kconfigpropagator.cpp
-   kconfigwizard.cpp
+#   kconfigpropagator.cpp
+#   kconfigwizard.cpp
    pluginloaderbase.cpp
    addresseelineedit.cpp
    kdatepickerpopup.cpp

@@ -16,15 +16,15 @@ target_link_libraries(
 
 ########### next target ###############
 
-set(testwizard_SRCS testwizard.cpp )
+# set(testwizard_SRCS testwizard.cpp )
 
 
-kde4_add_kcfg_files(testwizard_SRCS myconfig.kcfgc )
+# kde4_add_kcfg_files(testwizard_SRCS myconfig.kcfgc )
 
 
-kde4_add_executable(testwizard TEST ${testwizard_SRCS})
+# kde4_add_executable(testwizard TEST ${testwizard_SRCS})
 
-target_link_libraries(testwizard  kdepim ${KDE4_KDEUI_LIBS} ${QT_QT3SUPPORT_LIBRARY})
+# target_link_libraries(testwizard  kdepim ${KDE4_KDEUI_LIBS} ${QT_QT3SUPPORT_LIBRARY})
 
 
 ########### next target ###############
