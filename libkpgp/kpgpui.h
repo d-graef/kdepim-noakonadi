@@ -29,6 +29,7 @@
 #include <QtGui/QPixmap>
 #include <QtGui/QLabel>
 #include <Qt3Support/Q3PtrVector>
+#include <QTreeWidget>
 
 #include <kdebug.h>       // used in inlined methods
 #include <kdialog.h>      // base class of all dialogs here
@@ -38,15 +39,14 @@ class QString;
 class QRegExp;
 class QByteArray;
 class QCheckBox;            // needed by Config, KeySelectionDialog
-class Q3MultiLineEdit;      // needed by CipherTextDialog
+class QTextEdit;            // needed by CipherTextDialog
 class QComboBox;            // needed by Config
 class QPixmap;              // needed by KeySelectionDialog
 class QPushButton;          // needed by KeyRequester
 class QTimer;               // needed by KeySelectionDialog
 class QGroupBox;
-class Q3ListViewItem;
 
-class K3ListView;           // needed by KeySelectionDialog
+class QTreeWidget;          // needed by KeySelectionDialog
 class KPasswordEdit;        // needed by PassphraseDialog
 
 namespace Kpgp {
@@ -141,10 +141,10 @@ class KPGP_EXPORT KeySelectionDialog: public KeySelectionDialogSuper
 
   protected Q_SLOTS:
     virtual void slotRereadKeys();
-    virtual void slotSelectionChanged( Q3ListViewItem* );
+    virtual void slotSelectionChanged( QTreeWidgetItem* );
     virtual void slotSelectionChanged();
-    virtual void slotCheckSelection( Q3ListViewItem* = 0 );
-    virtual void slotRMB( Q3ListViewItem*, const QPoint&, int );
+    virtual void slotCheckSelection( QTreeWidgetItem* = 0 );
+    virtual void slotRMB( QTreeWidgetItem*, const QPoint&, int );
     virtual void slotRecheckKey();
     virtual void slotOk();
     virtual void slotCancel();
@@ -156,7 +156,7 @@ class KPGP_EXPORT KeySelectionDialog: public KeySelectionDialogSuper
     void filterByKeyIDOrUID( const QString & keyID );
     void filterByUID( const QString & uid );
     void showAllItems();
-    bool anyChildMatches( const Q3ListViewItem * item, QRegExp & rx ) const;
+    bool anyChildMatches( QTreeWidgetItem * item, QRegExp & rx ) const;
 
     void initKeylist( const KeyList& keyList, const KeyIDList& keyIds );
 
@@ -165,13 +165,13 @@ class KPGP_EXPORT KeySelectionDialog: public KeySelectionDialogSuper
     QString beautifyFingerprint( const QByteArray& ) const;
 
     // Returns the key ID of the key the given QListViewItem belongs to
-    KeyID getKeyId( const Q3ListViewItem* ) const;
+    KeyID getKeyId( const QTreeWidgetItem* ) const;
 
     // Returns: -1 = unusable, 0 = unknown, 1 = valid, but untrusted, 2 = trusted
     int keyValidity( const Kpgp::Key* ) const;
 
     // Updates the given QListViewItem with the data of the given key
-    void updateKeyInfo( const Kpgp::Key*, Q3ListViewItem* ) const;
+    void updateKeyInfo( const Kpgp::Key*, QTreeWidgetItem* ) const;
 
     /** Checks if choosing the given key is allowed
         Returns:
@@ -180,14 +180,14 @@ class KPGP_EXPORT KeySelectionDialog: public KeySelectionDialogSuper
              or not,
          1 = key can be chosen
     */
-    int keyAdmissibility( Q3ListViewItem*,
+    int keyAdmissibility( QTreeWidgetItem*,
                           TrustCheckMode = NoExpensiveTrustCheck ) const;
 
     // Perform expensive trust checks for the given keys
-    bool checkKeys( const QList<Q3ListViewItem*>& ) const;
+    bool checkKeys( const QList<QTreeWidgetItem*>& ) const;
 
   private:
-    K3ListView *mListView;
+    QTreeWidget *mListView;
     QCheckBox *mRememberCB;
     QPixmap *mKeyGoodPix, *mKeyBadPix, *mKeyUnknownPix, *mKeyValidPix;
     KeyIDList mKeyIds;
@@ -195,7 +195,7 @@ class KPGP_EXPORT KeySelectionDialog: public KeySelectionDialogSuper
     QTimer* mCheckSelectionTimer;
     QTimer* mStartSearchTimer;
     QString mSearchText;
-    Q3ListViewItem* mCurrentContextMenuItem;
+    QTreeWidgetItem* mCurrentContextMenuItem;
 
   static const int sCheckSelectionDelay;
 };
@@ -339,7 +339,7 @@ class KPGP_EXPORT CipherTextDialog: public KDialog
 
   private:
     void setMinimumSize();
-    Q3MultiLineEdit *mEditBox;
+    QTextEdit *mEditBox;
 };
 
 } // namespace Kpgp
