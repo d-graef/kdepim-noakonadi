@@ -174,7 +174,7 @@ void KNHeaderView::setActive( QTreeWidgetItem *i )
   }
 
   item->setActive( true );
-//  setSelected( item, true );
+  item->setSelected( true );
   setCurrentItem( i );
   ensureItemVisibleWithMargin( i );
   mActiveItem = item;
