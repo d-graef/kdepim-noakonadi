@@ -1452,7 +1452,9 @@ KeyApprovalDialog::KeyApprovalDialog( const QStringList& addresses,
   else {
     mEncryptToSelf = 0;
     // insert dummy KeyIdListBox
-    mKeyIdsLabels.insert( 0, 0 );
+    QLabel keyidsLd;
+    QLabel *keyidsLdp = &keyidsLd;
+    mKeyIdsLabels.insert( 0, keyidsLdp );
     //mKeyIdListBoxes.insert( 0, 0 );
   }
 
