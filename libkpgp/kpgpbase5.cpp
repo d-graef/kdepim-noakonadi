@@ -377,7 +377,7 @@ Base5::publicKeys( const QStringList & patterns )
   KeyList keys = parseKeyList( output, false );
 
   // sort the list of public keys
-  keys.sort();
+  qSort(keys);
 
   return keys;
 }
@@ -407,7 +407,7 @@ Base5::secretKeys( const QStringList & patterns )
   KeyList keys = parseKeyList( output, true );
 
   // sort the list of public keys
-  keys.sort();
+  qSort(keys);
 
   return keys;
 }
@@ -811,7 +811,7 @@ Base5::parseTrustDataForKey( Key* key, const QByteArray& str )
       QString uid = str.mid( pos, eol-pos );
 
       // set the validity of the corresponding user ID
-      for( UserIDListIterator it( userIDs ); it.current(); ++it )
+      for( UserIDListIterator it = userIDs.begin(); *it; ++it )
         if( (*it)->text() == uid )
         {
           kDebug( 5326 )<<"Setting the validity of"<<uid<<" to"<<validity;

@@ -438,7 +438,7 @@ BaseG::publicKeys( const QStringList & patterns )
   KeyList publicKeys = parseKeyList(output, false);
 
   // sort the list of public keys
-  publicKeys.sort();
+  qSort(publicKeys);
 
   return publicKeys;
 }
@@ -470,7 +470,7 @@ BaseG::secretKeys( const QStringList & patterns )
   KeyList secretKeys = parseKeyList(output, true);
 
   // sort the list of secret keys
-  secretKeys.sort();
+  qSort(secretKeys);
 
   return secretKeys;
 }

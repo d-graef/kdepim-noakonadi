@@ -106,9 +106,9 @@ Key::Key(const KeyID& keyid, const QString& uid, const bool secret) :
 Key::~Key()
 {
   //kDebug( 5326 ) <<"Kpgp::Key: Deleting key" << primaryUserID();
-  mUserIDs.setAutoDelete(true);
+//  mUserIDs.setAutoDelete(true);
   mUserIDs.clear();
-  mSubkeys.setAutoDelete(true);
+//  mSubkeys.setAutoDelete(true);
   mSubkeys.clear();
 }
 
@@ -126,9 +126,9 @@ Key::clear()
 
   mEncryptPref = UnknownEncryptPref;
 
-  mSubkeys.setAutoDelete(true);
+//  mSubkeys.setAutoDelete(true);
   mSubkeys.clear();
-  mUserIDs.setAutoDelete(true);
+//  mUserIDs.setAutoDelete(true);
   mUserIDs.clear();
 }
 
@@ -137,10 +137,15 @@ Key::keyTrust() const
 {
   Validity trust = KPGP_VALIDITY_UNKNOWN;
 
-  for( UserIDListIterator it(mUserIDs); it.current(); ++it )
+  int count = mUserIDs.count();
+  int i = 0;
+  UserID *it = 0;
+
+  for (i = 0; i < count; i++)
   {
-    if( (*it)->validity() > trust )
-      trust = (*it)->validity();
+    it = mUserIDs.at(i);
+     if( it->validity() > trust )
+      trust = it->validity();
   }
   
   return trust;
@@ -154,12 +159,17 @@ Key::keyTrust( const QString& uid ) const
   if( uid.isEmpty() )
     return trust;
 
-  for( UserIDListIterator it(mUserIDs); it.current(); ++it )
+  int count = mUserIDs.count();
+  int i = 0;
+  UserID *it = 0;
+
+  for ( i = 0; i < count; i++ )
   {
-    if( (*it)->text() == uid )
-      trust = (*it)->validity();
+    it = mUserIDs.at(i);
+    if( it->text() == uid )
+      trust = it->validity();
   }
-  
+
   return trust;
 }
 
@@ -169,9 +179,14 @@ Key::cloneKeyTrust( const Key* key )
   if( !key )
     return;
 
-  for( UserIDListIterator it(mUserIDs); it.current(); ++it )
+  int count = mUserIDs.count();
+  int i = 0;
+  UserID *it = 0;
+
+  for ( i = 0; i < count; i++ )
   {
-    (*it)->setValidity( key->keyTrust( (*it)->text() ) );
+    it = mUserIDs.at(i);
+    it->setValidity( key->keyTrust( it->text() ) );
   }
 }
 
@@ -209,9 +224,14 @@ bool Key::matchesUserID(const QString& str, bool cs)
 {
   if (str.isEmpty() || mUserIDs.isEmpty())
     return false;
-  
-  for (UserIDListIterator it(mUserIDs); it.current(); ++it) {
-    if (((*it)->text().indexOf(str, 0, cs?Qt::CaseSensitive:Qt::CaseInsensitive)) != -1)
+
+  int count = mUserIDs.count();
+  int i = 0;
+  UserID *it = 0;
+
+  for ( i = 0; i < count; i++ )  {
+    it = mUserIDs.at(i);
+    if ((it->text().indexOf(str, 0, cs?Qt::CaseSensitive:Qt::CaseInsensitive)) != -1)
       return true;
   }
 
@@ -234,14 +254,20 @@ Subkey *Key::getSubkey(const KeyID& keyID)
   // is the given key ID a long (16 chars) or a short (8 chars) key ID?
   bool longKeyID = (keyID.length() == 16);
 
-  for (SubkeyListIterator it(mSubkeys); it.current(); ++it) {
+  int count = mSubkeys.count();
+  int i = 0;
+  Subkey *it = 0;
+
+  for ( i = 0; i < count; i++ )  {
+
+    it = mSubkeys.at(i);
     if (longKeyID) {
-      if ((*it)->longKeyID() == keyID)
-        return (*it);
+      if (it->longKeyID() == keyID)
+        return it;
     }
     else {
-      if ((*it)->keyID() == keyID)
-        return (*it);
+      if (it->keyID() == keyID)
+        return it;
     }
   }
 

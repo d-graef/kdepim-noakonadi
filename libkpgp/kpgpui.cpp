@@ -441,11 +441,17 @@ void KeySelectionDialog::initKeylist( const KeyList& keyList,
   QStringList stringLpk;
 
   // build a list of all public keys
-  for( KeyListIterator it( keyList ); it.current(); ++it ) {
-    KeyID curKeyId = (*it)->primaryKeyID();
+//  KeyListIterator it = keyList.begin();
+  int count = keyList.count();
+  int i = 0;
+  Key *it = 0;
+
+   for ( i = 0; i < count; i++ ) {
+    Key *it = keyList.at(i);
+    KeyID curKeyId = it->primaryKeyID();
 
     stringLpk.clear();
-    stringLpk << curKeyId << (*it)->primaryUserID();
+    stringLpk << curKeyId << it->primaryUserID();
 
     QTreeWidgetItem* primaryUserID = new QTreeWidgetItem( mListView, stringLpk );
 
@@ -466,7 +472,7 @@ void KeySelectionDialog::initKeylist( const KeyList& keyList,
     QIcon badPix(*mKeyBadPix);
 
     // set icon for this key
-    switch( keyValidity( *it ) ) {
+    switch( keyValidity( it ) ) {
       case 0: // the key's validity can't be determined
         primaryUserID->setIcon( 0, unknownPix );
         break;
@@ -483,7 +489,7 @@ void KeySelectionDialog::initKeylist( const KeyList& keyList,
 
     QTreeWidgetItem* childItem;
     QStringList stringLi;
-    stringLi << "" << i18n( "Fingerprint: %1" , beautifyFingerprint( (*it)->primaryFingerprint() ) );
+    stringLi << "" << i18n( "Fingerprint: %1" , beautifyFingerprint( it->primaryFingerprint() ) );
 
     childItem = new QTreeWidgetItem( primaryUserID, stringLi );
 
@@ -491,14 +497,14 @@ void KeySelectionDialog::initKeylist( const KeyList& keyList,
          childItem->setSelected(true);
     }
     QStringList stringL;
-    stringL << "" << keyInfo( *it );
+    stringL << "" << keyInfo( it );
     childItem = new QTreeWidgetItem( primaryUserID, stringL );
     if( primaryUserID->isSelected() && (mListView->selectionMode() == QAbstractItemView::MultiSelection) ) {
       childItem->setSelected(true);
     }
 
-    UserIDList userIDs = (*it)->userIDs();
-    UserIDListIterator uidit( userIDs );
+    UserIDList userIDs = it->userIDs();
+    UserIDListIterator uidit = userIDs.begin();
     QStringList stringList;
     stringList << "" << (*uidit)->text();
     if( *uidit ) {
