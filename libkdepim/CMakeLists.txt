@@ -90,9 +90,10 @@ kde4_add_ui_files(kdepim_LIB_SRCS
   addresspicker.ui
 )
 
-kde4_add_library(kdepim SHARED ${kdepim_LIB_SRCS})
+# kde4_add_library(kdepim SHARED ${kdepim_LIB_SRCS})
+kde4_add_library(kdepimkn SHARED ${kdepim_LIB_SRCS})
 
-target_link_libraries(kdepim
+target_link_libraries(kdepimkn
   ${QT_QTDESIGNER_LIBRARY}
   ${KDEPIMLIBS_KRESOURCES_LIBS}
   ${KDEPIMLIBS_KABC_LIBS}
@@ -107,7 +108,7 @@ target_link_libraries(kdepim
   ${KDEPIMLIBS_KMIME_LIBS}
 )
 
-target_link_libraries(kdepim LINK_INTERFACE_LIBRARIES
+target_link_libraries(kdepimkn LINK_INTERFACE_LIBRARIES
   ${KDEPIMLIBS_KRESOURCES_LIBS}
   ${KDEPIMLIBS_KABC_LIBS}
   ${KDEPIMLIBS_KCAL_LIBS}
@@ -120,12 +121,12 @@ target_link_libraries(kdepim LINK_INTERFACE_LIBRARIES
 )
 
 if(MINGW)
-   target_link_libraries(kdepim oleaut32)
+   target_link_libraries(kdepimkn oleaut32)
 endif(MINGW)
 
 
-set_target_properties(kdepim PROPERTIES VERSION ${GENERIC_LIB_VERSION} SOVERSION ${GENERIC_LIB_SOVERSION})
-install(TARGETS kdepim ${INSTALL_TARGETS_DEFAULT_ARGS})
+set_target_properties(kdepimkn PROPERTIES VERSION ${GENERIC_LIB_VERSION} SOVERSION ${GENERIC_LIB_SOVERSION})
+install(TARGETS kdepimkn ${INSTALL_TARGETS_DEFAULT_ARGS})
 
 
 ########### next target ###############

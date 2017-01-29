@@ -21,12 +21,16 @@ set(kpgp_LIB_SRCS
    kpgpbase6.cpp )
 
 
-kde4_add_library(kpgp SHARED ${kpgp_LIB_SRCS})
+# kde4_add_library(kpgp SHARED ${kpgp_LIB_SRCS})
+kde4_add_library(kpgpkn SHARED ${kpgp_LIB_SRCS})
 
-target_link_libraries(kpgp ${KDE4_KDECORE_LIBS} ${KDE4_KDEUI_LIBS} )
+# target_link_libraries(kpgp ${KDE4_KDECORE_LIBS} ${KDE4_KDEUI_LIBS} )
+target_link_libraries(kpgpkn ${KDE4_KDECORE_LIBS} ${KDE4_KDEUI_LIBS} )
 
-set_target_properties(kpgp PROPERTIES VERSION ${GENERIC_LIB_VERSION} SOVERSION ${GENERIC_LIB_SOVERSION})
-install(TARGETS kpgp ${INSTALL_TARGETS_DEFAULT_ARGS})
+# set_target_properties(kpgp PROPERTIES VERSION ${GENERIC_LIB_VERSION} SOVERSION ${GENERIC_LIB_SOVERSION})
+set_target_properties(kpgpkn PROPERTIES VERSION ${GENERIC_LIB_VERSION} SOVERSION ${GENERIC_LIB_SOVERSION})
+# install(TARGETS kpgp ${INSTALL_TARGETS_DEFAULT_ARGS})
+install(TARGETS kpgpkn ${INSTALL_TARGETS_DEFAULT_ARGS})
 
 
 ########### install files ###############
