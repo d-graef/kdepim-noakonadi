@@ -40,7 +40,6 @@
 #include <KStandardDirs>
 #include <KStandardShortcut>
 #include <KUrl>
-#include <K3StaticDeleter>
 
 #include <QApplication>
 #include <QCursor>
@@ -74,14 +73,8 @@ QMap<QString,int>* s_completionSourceWeights = 0;
 // does not hold when clients are added later on
 QMap<int, int>* AddresseeLineEdit::s_ldapClientToCompletionSourceMap = 0;
 
-static K3StaticDeleter<KMailCompletion> completionDeleter;
-static K3StaticDeleter<KPIM::CompletionItemsMap> completionItemsDeleter;
-static K3StaticDeleter<QTimer> ldapTimerDeleter;
-static K3StaticDeleter<KPIM::LdapSearch> ldapSearchDeleter;
-static K3StaticDeleter<QString> ldapTextDeleter;
-static K3StaticDeleter<QStringList> completionSourcesDeleter;
-static K3StaticDeleter<QMap<QString,int> > completionSourceWeightsDeleter;
-static K3StaticDeleter<QMap<int, int> > ldapClientToCompletionSourceMapDeleter;
+static QMap<QString,int>  completionSourceWeightsDeleter;
+static QMap<int, int>  ldapClientToCompletionSourceMapDeleter;
 
 // needs to be unique, but the actual name doesn't matter much
 static QByteArray newLineEditObjectName()
@@ -136,23 +129,29 @@ void AddresseeLineEdit::updateLDAPWeights()
 void AddresseeLineEdit::init()
 {
   if ( !s_completion ) {
-    completionDeleter.setObject( s_completion, new KMailCompletion() );
+    K_GLOBAL_STATIC(KMailCompletion, completionDeleter);
+    s_completion =  completionDeleter;
     s_completion->setOrder( completionOrder() );
     s_completion->setIgnoreCase( true );
 
-    completionItemsDeleter.setObject( s_completionItemMap, new KPIM::CompletionItemsMap() );
-    completionSourcesDeleter.setObject( s_completionSources, new QStringList() );
-    completionSourceWeightsDeleter.setObject( s_completionSourceWeights, new QMap<QString,int> );
-    ldapClientToCompletionSourceMapDeleter.setObject( s_ldapClientToCompletionSourceMap, new QMap<int,int> );
+    K_GLOBAL_STATIC(CompletionItemsMap, completionItemsDeleter)
+    s_completionItemMap = completionItemsDeleter;
+    K_GLOBAL_STATIC(QStringList, completionSourcesDeleter)
+    s_completionSources =  completionSourcesDeleter;
+    s_completionSourceWeights = new QMap<QString,int>;
+    s_ldapClientToCompletionSourceMap = new QMap<int,int>;
   }
 //  connect( s_completion, SIGNAL(match(const QString&)),
 //           this, SLOT(slotMatched(const QString&)) );
 
   if ( m_useCompletion ) {
     if ( !s_LDAPTimer ) {
-      ldapTimerDeleter.setObject( s_LDAPTimer, new QTimer );
-      ldapSearchDeleter.setObject( s_LDAPSearch, new KPIM::LdapSearch );
-      ldapTextDeleter.setObject( s_LDAPText, new QString );
+      K_GLOBAL_STATIC(QTimer, ldapTimerDeleter)
+      s_LDAPTimer = ldapTimerDeleter;
+      K_GLOBAL_STATIC(KPIM::LdapSearch, ldapSearchDeleter)
+      s_LDAPSearch = ldapSearchDeleter;
+      K_GLOBAL_STATIC(QString, ldapTextDeleter)
+      s_LDAPText = ldapTextDeleter;
     }
 
     updateLDAPWeights();
